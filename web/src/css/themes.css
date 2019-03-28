@@ -1,0 +1,48 @@
+:root {
+   --sidebar-bg:             hsl(38, 20%, 70%);
+   
+   --sidebar-btn-bg:         hsl(38, 20%, 76%);
+   --sidebar-btn-border:     transparent;
+   --sidebar-btn-fg:         hsl(38, 20%, 55%);
+   --sidebar-btn-fg-active:  hsl(38, 20%, 48%);
+
+   --main-bg:                hsl(38, 39%, 95%);
+
+   --main-fg:                hsl(38, 39%, 9%);
+   --main-blockquote-fg:     hsl(38, 39%, 9%);
+
+   --main-link:              hsl(212, 97%, 43%);
+   
+   --main-hr:                hsl(38, 39%, 88%);
+   --main-pre-bg:            hsl(38, 39%, 88%);
+   --main-table-stripe-bg:   hsl(38, 39%, 88%);
+   --main-blockquote-border: hsl(38, 39%, 88%);
+
+   --main-pre-border:       hsl(38, 39%, 80%);
+   --main-table-border:     hsl(38, 39%, 80%);
+}
+
+.dark {
+   --sidebar-bg:             hsl(38, 20%, 30%);
+   
+   --sidebar-btn-bg:         hsl(38, 20%, 24%);
+   --sidebar-btn-border:     transparent;
+   --sidebar-btn-fg:         hsl(38, 20%, 45%);
+   --sidebar-btn-fg-active:  hsl(38, 20%, 52%);
+
+   --main-bg:                hsl(38, 39%, 5%);
+
+   --main-fg:                hsl(38, 20%, 70%);
+   --main-blockquote-fg:     hsl(38, 20%, 70%);
+
+   --main-link:              hsl(212, 50%, 70%);
+   
+   --main-hr:                hsl(38, 39%, 12%);
+   --main-pre-bg:            hsl(38, 39%, 12%);
+   --main-table-stripe-bg:   hsl(38, 39%, 12%);
+   --main-blockquote-border: hsl(38, 39%, 12%);
+
+   --main-pre-border:       hsl(38, 39%, 20%);
+   --main-table-border:     hsl(38, 39%, 20%);
+}
+

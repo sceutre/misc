@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "es2015",
+    "moduleResolution": "node",
+    "jsx": "react",
+    "outDir": "../bin/srcroot/dev",
+    "rootDir": "./src",
+    "removeComments": true,
+    "lib": ["es2015", "es2016", "es2017", "dom"],
+    "strict": true
+   },
+  "exclude": [
+      "node_modules"
+   ],
+   // "importRewrites": {
+   //    "pre": [
+   //       { "**/*.ts": "**/*" }, // suuport .ts ... is this a good idea?
+   //       { "**/*.tsx": "**/*" }, // suuport .tsx ... is this a good idea?
+   //       { "react": "preact" }   // try it out without rewriting all your source
+   //    ],
+   //    "emit": [
+   //       { "react-dom":    ""                                     }, // empty means delete? (presumably to use UMD globals, though only works if you name your import the same as the global)
+   //       { "lodash":       "../../node_modules/lodash/index.js"   },
+   //       { "*":            "../node_modules/*/index-es6.js"       }, // we can dream of such consistency
+   //       { "apple/**":     "../../node_modules/apple/**/index.js" }, // will work in browser (presuming this is a es6 module) if this path is accessible to web server
+   //       // "apple2/**":   "/flat_node/apple_**_index.js",
+   //       { "apple2/*":     "/flat_node/apple_*_index.js"       }, // will work in browser (presuming this is a es6 module and there was some sort of copy-and-flatten build task called whenever you install a library)
+   //       { "apple2/*/*":   "/flat_node/apple2_*_*_index.js"    }, // ** would include interior /'s so in our theoritical flat dir wouldn't work
+   //       { "apple2/*/*/*": "/flat_node/apple2_*_*_*_index.js"  }, // ** would include interior /'s so in our theoritical flat dir wouldn't work
+   //       { "**/node_modules/*/*.js": "/flat_node/*_*.js"       }, // support people trickily not using bare imports for node modules
+   
+   //       { "/**/*":        "/**/*.js"   }, // support both webpack and tsc-to-browser
+   //       { "../**/*":      "../**/*.js" },
+   //       { "./**/*":       "./**/*.js"  },
+   
+   //    ]
+   // }
+}

@@ -1,0 +1,116 @@
+@import url("normalize.css");
+@import url("fonts.css");
+@import url("themes.css");
+@import url("markdown.css");
+
+:focus {
+   outline: none;
+}
+
+.overall {
+   height: 100%;
+   display: flex;
+   flex-flow: row nowrap;
+   background: var(--main-bg);
+}
+
+#react {
+   position: absolute;
+   top: 0;
+   bottom: 0;
+   left: 0;
+   right: 0;
+}
+
+.main {
+   flex-basis: 75%;
+   max-width: 75%;
+   overflow-y:auto;
+   padding: 20px 20px 0 20px;
+   background: var(--main-bg);
+}
+
+.sidebar {
+   flex-basis: 25%;
+   max-width: 25%;
+   display: flex;
+   flex-flow: column nowrap;
+   background: var(--sidebar-bg);
+}
+
+.main-content {
+   padding-bottom: 20px;
+}
+
+.sidebar-content {
+   flex: 1 1 auto;
+   overflow-y: auto;
+   padding: 15px;
+   padding-top: 40px;
+}
+
+.sidebar-footer {
+   flex: 0 0 auto;
+   display: flex;
+   flex-flow: row nowrap;
+   justify-content: space-between;
+   align-items: center;
+   padding: 15px;
+}
+
+.logo {
+   width: 70px;
+   height: 70px;
+   opacity: 0.2;
+}
+
+.sidebar button {
+   cursor: pointer;
+   color: var(--sidebar-btn-fg);
+   background: var(--sidebar-btn-bg);
+   border: 1px solid var(--sidebar-btn-border);
+   border-radius: 6px;
+   font-size: 14px;
+   padding: 3px 24px 5px;
+   text-decoration: none;
+}
+
+.sidebar button:hover, 
+.sidebar button:focus {
+   color:  var(--sidebar-btn-fg-active);
+}
+
+.sidebar button:active {
+   color:  var(--sidebar-btn-fg-active);
+   position: relative;
+   top: 1px;
+}
+
+.main-title {
+   font-weight: bold;
+   font-size: 30px;
+   margin-bottom: 20px;
+   color: var(--main-fg);
+}
+
+.main-edit {
+   height: calc(100% - 70px);
+}
+
+.main-edit textarea {
+   width: calc(100% - 15px);
+   height: calc(100% - 15px);
+   background: var(--main-pre-bg);
+   border: 1px solid var(--main-pre-border);
+   font-family: 'IBM Plex Mono', SFMono-Regular, Consolas, Liberation Mono, Menlo, Courier, monospace;
+   font-size: 12px;
+   line-height: 1.4;
+   padding: 10px;
+   border-radius: 5px 0 0 5px;
+   resize: none;
+   color: var(--main-fg);
+}
+
+.main-edit textarea:focus {
+   border: 1px solid var(--main-pre-border);
+}

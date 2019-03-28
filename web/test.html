@@ -1,0 +1,71 @@
+<html>
+<head>
+<link rel="stylesheet" href="assets/normalize.css">
+<script>
+var module = {};
+function gen(paragraphs) { let s = ""; let w = dictionary.words; for (let i = 0; i < (paragraphs || 1); i++) { let sentences = 5 + (Math.floor(Math.random() * 4) - 2); for (let j = 0; j < sentences; j++) {
+let words = 10 + (Math.floor(Math.random() * 4) - 2); for (let k = 0; k < words; k++) { let ix = Math.floor(Math.random() * w.length); s += " " + (k==0 ? (w[ix].substring(0,1).toUpperCase() + w[ix].substring(1)) : w[ix]);
+} s += "." } s += "<br><br>"; } return s; }
+</script>
+<script src="https://npm-cdn.herokuapp.com/lorem-hipsum@0.1.7/lib/dictionary.js"></script>
+<style>
+   .overall {
+      background: red;
+      height: 100%;
+      display: flex;
+      flex-flow: row nowrap;
+   }
+   .sidebar {
+      flex-basis: 25%;
+      max-width: 25%;
+      background: blue;
+      display: flex;
+      flex-flow: column nowrap;
+   }
+   .sidebar-content {
+      flex: 1 1 auto;
+      background: purple;
+      overflow-y: auto;
+      padding: 15px;
+   }
+   .sidebar-footer {
+      flex: 0 0 auto;
+      background: black;
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+   }
+   .main {
+      flex-basis: 75%;
+      max-width: 75%;
+      background: green;
+      overflow-y:auto;
+      padding: 20px;
+   }
+</style>
+</head>
+<body>
+<div class="overall">
+   <div class="sidebar">
+      <div class="sidebar-content"></div>
+      <div class="sidebar-footer">
+         <img width=70 height=70 src="assets/prod/misc.png">
+         <div>
+               <button style="margin-right: 10px">Save</button>
+               <button>Cancel</button>
+         </div>
+      </div>
+   </div>
+   <div class="main">
+         <div class="main-title"><h1>Title</h1></div>
+         <div class="main-content"></div>
+   </div>
+</div>
+<script>
+   document.getElementsByClassName("sidebar-content")[0].innerHTML = gen(20);
+   document.getElementsByClassName("main-content")[0].innerHTML = gen(40);
+</script>
+</body>
+</html>
