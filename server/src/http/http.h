@@ -6,6 +6,7 @@
 #define H_CONTENT_LENGTH "Content-Length"
 #define H_CONTENT_TYPE "Content-Type"
 #define H_CACHE_CONTROL "Cache-Control"
+#define H_CONNECTION "Connection"
 #define H_CACHE_CONTROL_CACHE "max-age=31536000"
 #define H_CACHE_CONTROL_NO_CACHE "no-cache, no-store, must-revalidate"
 #define H_TRANSFER_ENCODING "Transfer-Encoding"

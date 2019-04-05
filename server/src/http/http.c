@@ -16,6 +16,7 @@ static void readHeader(HttpContext *ctx);
 static void readBody(HttpContext *ctx);
 static void setDate(Map *map);
 static bool peekEOF(HttpContext *ctx);
+static void autoclose(HttpContext *ctx);
 
 void http_request(HttpContext *ctx) {
    reset(ctx);
@@ -26,6 +27,7 @@ void http_request(HttpContext *ctx) {
          return;
       }
       readHeader(ctx);
+      autoclose(ctx);
       foreach_req(ctx, printHeader);
       readBody(ctx);
    } catch {
@@ -265,4 +267,12 @@ void http_response_headers(HttpContext *ctx, int status, boolean cache, char *mi
    if (mime != NULL) put_resp(ctx, H_CONTENT_TYPE, mime);
    if (cache) put_resp(ctx, H_CACHE_CONTROL, H_CACHE_CONTROL_CACHE);
    if (!cache) put_resp(ctx, H_CACHE_CONTROL, H_CACHE_CONTROL_NO_CACHE);
+}
+
+void autoclose(HttpContext *ctx) {
+   char *header = map_get(&(ctx->requestHeaders), H_CONNECTION);
+   if (header && containsIgnoreCase(header, "close")) {
+      ctx->closeDesired = true;
+      map_put(&(ctx->responseHeaders), H_CONNECTION, "close");
+   }
 }

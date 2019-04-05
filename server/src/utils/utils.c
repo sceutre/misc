@@ -119,3 +119,11 @@ void stringCopyUpTo(char *dest, const char *src, char stopChar, int max) {
       dest[i] = src[i];
    }
 }
+
+int findAll(char *haystack, char c, int *array, int size) {
+   int foundIx = 0;
+   for (int i = 0; foundIx < size && haystack[i] != 0; i++) {
+      if (haystack[i] == c) array[foundIx++] = i;
+   }
+   return foundIx;
+}

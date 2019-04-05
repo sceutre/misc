@@ -1,6 +1,7 @@
 BIN_DIR := bin
 SRC_DIR := server/src
 BUILD_DIR := build
+INSTALL_DIR := ../../apps/Misc
 
 CC := gcc
 CFLAGS = -std=c99 -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d 
@@ -17,7 +18,7 @@ DEP_FILES := $(C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.d)
 DIRS := $(BIN_DIR) $(patsubst $(SRC_DIR)%,$(BUILD_DIR)%,$(shell find $(SRC_DIR) -type d))
 
 .DEFAULT: all
-.PHONY: all, clean, run, dirs, fresh, debug, release, web, webwatch
+.PHONY: all, clean, run, dirs, fresh, debug, release, web, webwatch, install
 
 all: debug
 
@@ -71,5 +72,10 @@ $(ASSETS): $(shell find web/assets -type f)
 	@printf "  \xE2\x9c\x93 $@\n"
 
 $(DEP_FILES): $(BUILD_DIR)/%.d: ;
+
+install: clean release
+	@rm -rf $(INSTALL_DIR)/misc.exe $(INSTALL_DIR)/srcroot
+	@cp -R $(BIN_DIR)/misc.exe $(BIN_DIR)/srcroot $(INSTALL_DIR)
+	@printf "  \xE2\x9c\x93 $@\n"
 
 -include $(DEP_FILES)

@@ -16,7 +16,7 @@ static void showContextMenu(HWND hWnd) {
    GetCursorPos(&pt);
    HMENU hMenu = CreatePopupMenu();
    if (hMenu) {
-      for (int i = 0; i < sb_count(items); i++) {
+      for (int i = 1; i < sb_count(items); i++) {
          InsertMenu(hMenu, -1, MF_BYPOSITION, MENU_START + i, items[i].menuText);
       }
       SetForegroundWindow(hWnd);
@@ -35,12 +35,15 @@ static LRESULT CALLBACK appWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
             case WM_CONTEXTMENU:
                showContextMenu(hWnd);
                break;
+            case WM_LBUTTONDBLCLK:
+               items[0].callback();
+               break;
          }
          break;
       case WM_COMMAND:
          ix = LOWORD(wParam);
          ix -= MENU_START;
-         items[ix].callback();
+         items[ix+1].callback();
          return 1;
       case WM_DESTROY:
          notifyIconData.uFlags = 0;

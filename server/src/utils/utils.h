@@ -23,5 +23,6 @@ void lowercase(char *src, char *dest, int n);
 char **parseArgv(Map *options, char **argv, int argc);
 int toInt(char *str);
 void stringCopyUpTo(char *dest, const char *src, char stopChar, int max);
+int findAll(char *haystack, char c, int *array, int size);
 
 #endif  // UTILS_H
