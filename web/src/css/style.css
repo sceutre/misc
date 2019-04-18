@@ -64,6 +64,10 @@
    opacity: 0.2;
 }
 
+.dirty .logo {
+   opacity: 0.8;
+}
+
 .sidebar button {
    cursor: pointer;
    color: var(--sidebar-btn-fg);

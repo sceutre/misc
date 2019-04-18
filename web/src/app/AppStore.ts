@@ -4,7 +4,9 @@ import {Action} from "../flux-ux/action.js";
 export const enum Status {
    UNLOADED,
    WAITING,
-   LOADED
+   LOADED,
+   SAVING,
+   THEN_HTML
 }
 
 interface AppData {
@@ -15,6 +17,7 @@ interface AppData {
    markdownProgress: Status;
    htmlProgress: Status;
    htmlSidebarProgress: Status;
+   autosaveProgress: Status;
 }
 
 export function path() {
@@ -33,7 +36,8 @@ class AppStoreClass extends Store<AppData> {
          generatedSidebarHtml: "",
          markdownProgress: Status.UNLOADED,
          htmlProgress: Status.UNLOADED,
-         htmlSidebarProgress: Status.UNLOADED
+         htmlSidebarProgress: Status.UNLOADED,
+         autosaveProgress: Status.LOADED
       }, "appStore");
    }
 
@@ -65,6 +69,10 @@ class AppStoreClass extends Store<AppData> {
       this.update(x => x.markdownProgress = d.progress);
    };
 
+   private onSetAutosaveProgress = (d: {progress: Status}) => {
+      this.update(x => x.autosaveProgress = d.progress);
+   };
+
    actions = {
       setEditing: Action("setEditing", this.onSetEditing),
       setMarkdown: Action("setMarkdown", this.onSetMarkdown),
@@ -73,6 +81,7 @@ class AppStoreClass extends Store<AppData> {
       setHtmlProgress: Action("setHtmlProgress", this.onSetHtmlProgress),
       setHtmlSidebarProgress: Action("setHtmlSidebarProgress", this.onSetHtmlSidebarProgress),
       setMarkdownProgress: Action("setMarkdownProgress", this.onSetMarkdownProgress),
+      setAutosaveProgress: Action("setAutosaveProgress", this.onSetAutosaveProgress),
    };
 }
 

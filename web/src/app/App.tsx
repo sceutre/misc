@@ -3,13 +3,14 @@ import {AppStore, path, Status} from "./AppStore.js";
 
 interface PropsDerived {
    isEditing: boolean;
+   isDirty:boolean;
    markdown: string;
    html: string;
    sidebarHtml: string;
    title: string;
 }
 
-const Sidebar: React.FC<{html: string, onEdit: Fn, onSave: Fn, onCancel: Fn, onTheme: Fn, editing: boolean}> = props => {
+const Sidebar: React.FC<{html: string, onEdit: Fn, onDone: Fn, onTheme: Fn, editing: boolean}> = props => {
    return (
       <div className="sidebar">
          <div className="sidebar-content">
@@ -19,8 +20,7 @@ const Sidebar: React.FC<{html: string, onEdit: Fn, onSave: Fn, onCancel: Fn, onT
             <img className="logo" src="/-/src/prod/misc.png" onClick={props.onTheme}/>
             <div>
                {props.editing ? <>
-                  <button onClick={props.onSave} style={{marginRight: "10px"}}>Save</button>
-                  <button onClick={props.onCancel}>Cancel</button>
+                  <button onClick={props.onDone}>Done</button>
                </> : <>
                   <button onClick={props.onEdit}>Edit</button>
                </>}
@@ -62,31 +62,19 @@ class App extends React.PureComponent<PropsDerived> {
          markdown: AppStore.data.markdown,
          html: AppStore.data.generatedHtml,
          sidebarHtml: AppStore.data.generatedSidebarHtml,
+         isDirty: AppStore.data.autosaveProgress == Status.WAITING,
          title: path()
       }
    }
 
    render() {
-      let {title, isEditing, markdown, html, sidebarHtml} = this.props;
+      let {title, isEditing, markdown, html, sidebarHtml, isDirty} = this.props;
       return (
-         <div className={"overall " + (isDarkTheme() ? "dark" : "")}>
-            <Sidebar html={sidebarHtml} onEdit={this.onStartEditing} onCancel={this.onCancel} onSave={this.onSave} onTheme={this.onToggleDark} editing={isEditing}/>
-            <Main html={html} markdown={markdown} title={title} onText={this.onTextUpdate} onClick={this.onContentClick} editing={isEditing} />
+         <div className={"overall " + (isDarkTheme() ? "dark" : "") + (isDirty ? " dirty" : "")}>
+            <Sidebar html={sidebarHtml} onEdit={this.onStartEditing} onDone={onDone} onTheme={this.onToggleDark} editing={isEditing}/>
+            <Main html={html} markdown={markdown} title={title} onText={onText} onClick={this.onContentClick} editing={isEditing} />
          </div>
       );
-   }
-
-   onTextUpdate = (s: string) => {
-      AppStore.actions.setMarkdown({markdown: s});
-   };
-
-   onSave = () => {
-      asyncSave(AppStore.data.markdown);
-   }
-
-   onCancel = () => {
-      asyncMarkdown(true);
-      AppStore.actions.setEditing({editing: false});
    }
 
    onStartEditing = () => {
@@ -120,8 +108,7 @@ class App extends React.PureComponent<PropsDerived> {
          suffix = suffix.replace(/^~(.*)~$/, "$1");
          if (mid == "x") suffix = "~" + suffix + "~";
          lines[lineNum] = prefix + " [" + mid + "] " + suffix; 
-         this.onTextUpdate(lines.join("\n"));
-         this.onSave();
+         onText(lines.join("\n"));
       }
    }
 }
@@ -135,20 +122,82 @@ export {inst as App};
 
 // services
 
+setInterval(async () => {
+   if (AppStore.data.markdownProgress == Status.UNLOADED) return;
+   if (AppStore.data.autosaveProgress != Status.LOADED) return;
+   if (Date.now() - lastLoadTime < 60000) return;
+   let resp = await fetch("/-/md/" + path());
+   if (resp.ok) {
+      lastLoadTime = Date.now();
+      let text = await resp.text();
+      if (text != lastLoad) {
+         lastLoad = text;
+         AppStore.actions.setMarkdown({markdown: text});
+         if (!AppStore.data.isEditing) {
+            await asyncHtml(true);
+            if (path() == "Sidebar") await asyncSidebarHtml(true);
+         }
+      }
+   }
+}, 10000);
+
 function wait(tm: number) {
    return new Promise((resolve, reject) => {
       setTimeout(() => resolve(true), tm);
    });
 }
 
-async function asyncSave(s: string) {
-   let resp = await fetch("/-/md/" + path(), {method: "POST", body: s});
-   if (resp.ok) {
+let autosaveTimeout:number = 0;
+let lastLoad = "";
+let lastLoadTime = 0;
+
+async function onText(s:string) {
+   if (autosaveTimeout) { clearTimeout(autosaveTimeout); autosaveTimeout = 0; }
+   AppStore.actions.setMarkdown({ markdown: s});
+   if (!AppStore.data.isEditing) {
+      await save();
       await asyncHtml(true);
-      if (path() == "Sidebar") {
-         await asyncSidebarHtml(true);
-      }
+      if (path() == "Sidebar") await asyncSidebarHtml(true);
+   } else {
+      autosaveTimeout = window.setTimeout(autosave, 1000*5);
+      AppStore.actions.setAutosaveProgress({progress: Status.WAITING});
+   }
+}
+
+async function autosave() {
+   autosaveTimeout = 0;
+   await save();
+}
+
+async function save() {
+   AppStore.actions.setAutosaveProgress({progress: Status.SAVING});
+   let resp = await fetch("/-/md/" + path(), {method: "POST", body: AppStore.data.markdown});
+   if (!resp.ok) throw "save failed";
+   lastLoad = AppStore.data.markdown;
+   lastLoadTime = Date.now();
+   if (AppStore.data.autosaveProgress == Status.THEN_HTML) {
+      await asyncHtml(true);
+      if (path() == "Sidebar") await asyncSidebarHtml(true);
       AppStore.actions.setEditing({editing: false});
+   }
+   AppStore.actions.setAutosaveProgress({progress: Status.LOADED});
+
+}
+
+async function onDone() {
+   if (autosaveTimeout) { clearTimeout(autosaveTimeout); autosaveTimeout = 0; }
+   switch (AppStore.data.autosaveProgress) {
+      case Status.LOADED:
+         await asyncHtml(true);
+         if (path() == "Sidebar") await asyncSidebarHtml(true);
+         AppStore.actions.setEditing({editing: false});
+         return;
+      case Status.WAITING:
+         save();
+         return;
+      case Status.SAVING:
+         AppStore.actions.setAutosaveProgress({progress: Status.THEN_HTML});
+         return;
    }
 }
 
@@ -168,31 +217,29 @@ async function asyncHtml(force?: boolean) {
 }
 
 async function asyncSidebarHtml(force?: boolean) {
+   await wait(0);
    if (AppStore.data.htmlSidebarProgress == Status.UNLOADED || force) {
-      await wait(0);
-      if (AppStore.data.htmlSidebarProgress == Status.UNLOADED || force) {
-         AppStore.actions.setHtmlSidebarProgress({progress: Status.WAITING});
-         let resp = await fetch("/-/md-to-html/Sidebar");
-         if (resp.ok) {
-            let text = await resp.text();
-            AppStore.actions.setSidebarHtml({html: text});
-            AppStore.actions.setHtmlSidebarProgress({progress: Status.LOADED});
-         }
+      AppStore.actions.setHtmlSidebarProgress({progress: Status.WAITING});
+      let resp = await fetch("/-/md-to-html/Sidebar");
+      if (resp.ok) {
+         let text = await resp.text();
+         AppStore.actions.setSidebarHtml({html: text});
+         AppStore.actions.setHtmlSidebarProgress({progress: Status.LOADED});
       }
    }
 }
 
 async function asyncMarkdown(force?: boolean) {
+   await wait(0);
    if (AppStore.data.markdownProgress == Status.UNLOADED || force) {
-      await wait(0);
-      if (AppStore.data.markdownProgress == Status.UNLOADED || force) {
-         AppStore.actions.setMarkdownProgress({progress: Status.WAITING});
-         let resp = await fetch("/-/md/" + path());
-         if (resp.ok) {
-            let text = await resp.text();
-            AppStore.actions.setMarkdown({markdown: text});
-            AppStore.actions.setMarkdownProgress({progress: Status.LOADED});
-         }
+      AppStore.actions.setMarkdownProgress({progress: Status.WAITING});
+      let resp = await fetch("/-/md/" + path());
+      if (resp.ok) {
+         let text = await resp.text();
+         let lastLoad = text;
+         let lastLoadTime = Date.now();
+         AppStore.actions.setMarkdown({markdown: text});
+         AppStore.actions.setMarkdownProgress({progress: Status.LOADED});
       }
    }
 }
@@ -206,4 +253,8 @@ function isDarkTheme() {
 function toggleDarkTheme() {
    localStorage.setItem("theme", isDarkTheme() ? "light" : "dark");
 }
+
+
+
+
 

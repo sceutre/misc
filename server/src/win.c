@@ -43,7 +43,7 @@ static LRESULT CALLBACK appWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
       case WM_COMMAND:
          ix = LOWORD(wParam);
          ix -= MENU_START;
-         items[ix+1].callback();
+         items[ix].callback();
          return 1;
       case WM_DESTROY:
          notifyIconData.uFlags = 0;
