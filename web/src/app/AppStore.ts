@@ -2,9 +2,9 @@ import {Store} from "../flux-ux/store.js";
 import {Action} from "../flux-ux/action.js";
 
 export const enum Status {
-   UNLOADED,
+   EMPTY,
    WAITING,
-   LOADED,
+   OK,
    SAVING,
    THEN_HTML
 }
@@ -14,10 +14,10 @@ interface AppData {
    markdown: string;
    generatedHtml: string;
    generatedSidebarHtml: string;
-   markdownProgress: Status;
-   htmlProgress: Status;
-   htmlSidebarProgress: Status;
-   autosaveProgress: Status;
+   markdownStatus: Status;
+   htmlStatus: Status;
+   htmlSidebarStatus: Status;
+   autosaveStatus: Status;
 }
 
 export function path() {
@@ -34,10 +34,10 @@ class AppStoreClass extends Store<AppData> {
          markdown: "",
          generatedHtml: "",
          generatedSidebarHtml: "",
-         markdownProgress: Status.UNLOADED,
-         htmlProgress: Status.UNLOADED,
-         htmlSidebarProgress: Status.UNLOADED,
-         autosaveProgress: Status.LOADED
+         markdownStatus: Status.EMPTY,
+         htmlStatus: Status.EMPTY,
+         htmlSidebarStatus: Status.EMPTY,
+         autosaveStatus: Status.OK
       }, "appStore");
    }
 
@@ -57,20 +57,20 @@ class AppStoreClass extends Store<AppData> {
       this.update(x => x.generatedSidebarHtml = d.html);
    };
 
-   private onSetHtmlProgress = (d: {progress: Status}) => {
-      this.update(x => x.htmlProgress = d.progress);
+   private onSetHtmlStatus = (d: {status: Status}) => {
+      this.update(x => x.htmlStatus = d.status);
    };
 
-   private onSetHtmlSidebarProgress = (d: {progress: Status}) => {
-      this.update(x => x.htmlSidebarProgress = d.progress);
+   private onSetHtmlSidebarStatus = (d: {status: Status}) => {
+      this.update(x => x.htmlSidebarStatus = d.status);
    };
 
-   private onSetMarkdownProgress = (d: {progress: Status}) => {
-      this.update(x => x.markdownProgress = d.progress);
+   private onSetMarkdownStatus = (d: {status: Status}) => {
+      this.update(x => x.markdownStatus = d.status);
    };
 
-   private onSetAutosaveProgress = (d: {progress: Status}) => {
-      this.update(x => x.autosaveProgress = d.progress);
+   private onSetAutosaveStatus = (d: {status: Status}) => {
+      this.update(x => x.autosaveStatus = d.status);
    };
 
    actions = {
@@ -78,10 +78,10 @@ class AppStoreClass extends Store<AppData> {
       setMarkdown: Action("setMarkdown", this.onSetMarkdown),
       setHtml: Action("setHtml", this.onSetHtml),
       setSidebarHtml: Action("setSidebarHtml", this.onSetSidebarHtml),
-      setHtmlProgress: Action("setHtmlProgress", this.onSetHtmlProgress),
-      setHtmlSidebarProgress: Action("setHtmlSidebarProgress", this.onSetHtmlSidebarProgress),
-      setMarkdownProgress: Action("setMarkdownProgress", this.onSetMarkdownProgress),
-      setAutosaveProgress: Action("setAutosaveProgress", this.onSetAutosaveProgress),
+      setHtmlStatus: Action("setHtmlStatus", this.onSetHtmlStatus),
+      setHtmlSidebarStatus: Action("setHtmlSidebarStatus", this.onSetHtmlSidebarStatus),
+      setMarkdownStatus: Action("setMarkdownStatus", this.onSetMarkdownStatus),
+      setAutosaveStatus: Action("setAutosaveStatus", this.onSetAutosaveStatus),
    };
 }
 

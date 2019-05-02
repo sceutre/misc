@@ -62,7 +62,7 @@ class App extends React.PureComponent<PropsDerived> {
          markdown: AppStore.data.markdown,
          html: AppStore.data.generatedHtml,
          sidebarHtml: AppStore.data.generatedSidebarHtml,
-         isDirty: AppStore.data.autosaveProgress == Status.WAITING,
+         isDirty: AppStore.data.autosaveStatus == Status.WAITING,
          title: path()
       }
    }
@@ -123,8 +123,8 @@ export {inst as App};
 // services
 
 setInterval(async () => {
-   if (AppStore.data.markdownProgress == Status.UNLOADED) return;
-   if (AppStore.data.autosaveProgress != Status.LOADED) return;
+   if (AppStore.data.markdownStatus == Status.EMPTY) return;
+   if (AppStore.data.autosaveStatus != Status.OK) return;
    if (Date.now() - lastLoadTime < 60000) return;
    let resp = await fetch("/-/md/" + path());
    if (resp.ok) {
@@ -160,7 +160,7 @@ async function onText(s:string) {
       if (path() == "Sidebar") await asyncSidebarHtml(true);
    } else {
       autosaveTimeout = window.setTimeout(autosave, 1000*5);
-      AppStore.actions.setAutosaveProgress({progress: Status.WAITING});
+      AppStore.actions.setAutosaveStatus({status: Status.WAITING});
    }
 }
 
@@ -170,47 +170,48 @@ async function autosave() {
 }
 
 async function save() {
-   AppStore.actions.setAutosaveProgress({progress: Status.SAVING});
+   AppStore.actions.setAutosaveStatus({status: Status.SAVING});
    let resp = await fetch("/-/md/" + path(), {method: "POST", body: AppStore.data.markdown});
    if (!resp.ok) throw "save failed";
    lastLoad = AppStore.data.markdown;
    lastLoadTime = Date.now();
-   if (AppStore.data.autosaveProgress == Status.THEN_HTML) {
+   if (AppStore.data.autosaveStatus == Status.THEN_HTML) {
       await asyncHtml(true);
       if (path() == "Sidebar") await asyncSidebarHtml(true);
       AppStore.actions.setEditing({editing: false});
    }
-   AppStore.actions.setAutosaveProgress({progress: Status.LOADED});
+   AppStore.actions.setAutosaveStatus({status: Status.OK});
 
 }
 
 async function onDone() {
    if (autosaveTimeout) { clearTimeout(autosaveTimeout); autosaveTimeout = 0; }
-   switch (AppStore.data.autosaveProgress) {
-      case Status.LOADED:
+   switch (AppStore.data.autosaveStatus) {
+      case Status.OK:
          await asyncHtml(true);
          if (path() == "Sidebar") await asyncSidebarHtml(true);
          AppStore.actions.setEditing({editing: false});
          return;
       case Status.WAITING:
          save();
+         AppStore.actions.setAutosaveStatus({status: Status.THEN_HTML});
          return;
       case Status.SAVING:
-         AppStore.actions.setAutosaveProgress({progress: Status.THEN_HTML});
+         AppStore.actions.setAutosaveStatus({status: Status.THEN_HTML});
          return;
    }
 }
 
 async function asyncHtml(force?: boolean) {
-   if (AppStore.data.htmlProgress == Status.UNLOADED || force) {
+   if (AppStore.data.htmlStatus == Status.EMPTY || force) {
       await wait(0);
-      if (AppStore.data.htmlProgress == Status.UNLOADED || force) {
-         AppStore.actions.setHtmlProgress({progress: Status.WAITING});
+      if (AppStore.data.htmlStatus == Status.EMPTY || force) {
+         AppStore.actions.setHtmlStatus({status: Status.WAITING});
          let resp = await fetch("/-/md-to-html/" + path());
          if (resp.ok) {
             let text = await resp.text();
             AppStore.actions.setHtml({html: text});
-            AppStore.actions.setHtmlProgress({progress: Status.LOADED});
+            AppStore.actions.setHtmlStatus({status: Status.OK});
          }
       }
    }
@@ -218,28 +219,28 @@ async function asyncHtml(force?: boolean) {
 
 async function asyncSidebarHtml(force?: boolean) {
    await wait(0);
-   if (AppStore.data.htmlSidebarProgress == Status.UNLOADED || force) {
-      AppStore.actions.setHtmlSidebarProgress({progress: Status.WAITING});
+   if (AppStore.data.htmlSidebarStatus == Status.EMPTY || force) {
+      AppStore.actions.setHtmlSidebarStatus({status: Status.WAITING});
       let resp = await fetch("/-/md-to-html/Sidebar");
       if (resp.ok) {
          let text = await resp.text();
          AppStore.actions.setSidebarHtml({html: text});
-         AppStore.actions.setHtmlSidebarProgress({progress: Status.LOADED});
+         AppStore.actions.setHtmlSidebarStatus({status: Status.OK});
       }
    }
 }
 
 async function asyncMarkdown(force?: boolean) {
    await wait(0);
-   if (AppStore.data.markdownProgress == Status.UNLOADED || force) {
-      AppStore.actions.setMarkdownProgress({progress: Status.WAITING});
+   if (AppStore.data.markdownStatus == Status.EMPTY || force) {
+      AppStore.actions.setMarkdownStatus({status: Status.WAITING});
       let resp = await fetch("/-/md/" + path());
       if (resp.ok) {
          let text = await resp.text();
          let lastLoad = text;
          let lastLoadTime = Date.now();
          AppStore.actions.setMarkdown({markdown: text});
-         AppStore.actions.setMarkdownProgress({progress: Status.LOADED});
+         AppStore.actions.setMarkdownStatus({status: Status.OK});
       }
    }
 }
