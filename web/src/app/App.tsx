@@ -3,47 +3,90 @@ import {AppStore, path, Status} from "./AppStore.js";
 
 interface PropsDerived {
    isEditing: boolean;
-   isDirty:boolean;
+   isDirty: boolean;
    markdown: string;
    html: string;
    sidebarHtml: string;
    title: string;
 }
 
-const Sidebar: React.FC<{html: string, onEdit: Fn, onDone: Fn, onTheme: Fn, editing: boolean}> = props => {
+interface SidebarProps {
+   html: string;
+   onEdit: Fn;
+   onDone: Fn;
+   onTheme: Fn;
+   editing: boolean
+}
+
+interface MainProps {
+   html: string;
+   markdown: string;
+   title: string; 
+   onText: Fn<string>; 
+   onClick: Fn;
+   editing: boolean;
+}
+
+function Sidebar(props: SidebarProps) {
    return (
       <div className="sidebar">
          <div className="sidebar-content">
             <div className="markdown-body" dangerouslySetInnerHTML={{__html: props.html}}></div>
          </div>
          <div className="sidebar-footer">
-            <img className="logo" src="/-/src/prod/misc.png" onClick={props.onTheme}/>
+            <img className="logo" src="/-/src/prod/misc.png" onClick={props.onTheme} />
             <div>
-               {props.editing ? <>
-                  <button onClick={props.onDone}>Done</button>
-               </> : <>
-                  <button onClick={props.onEdit}>Edit</button>
-               </>}
+               {props.editing ? <button onClick={props.onDone}>Done</button> : <button onClick={props.onEdit}>Edit</button>}
             </div>
          </div>
       </div>
    );
-};
+}
 
-const Main: React.FC<{html: string, markdown: string, title:string, onText: Fn<string>, onClick: Fn, editing: boolean}> = props => {
+interface TextAreaProps {
+   onChange: Fn;
+   value: string;
+} 
+
+const SPACES = [ "", " ", "  ", "   "];
+
+function TextArea(props:TextAreaProps) {
+   const textArea = React.useRef<HTMLTextAreaElement>(null!);
+   
+   function onKeyDown(e:React.KeyboardEvent<HTMLTextAreaElement>) {
+      if (e.key === "Tab") {
+         e.preventDefault();
+         const { selectionStart, selectionEnd } = e.currentTarget;
+         let s = props.value;
+         let ix = s.lastIndexOf("\n", selectionStart) + 1;
+         let spaces = 3 - ((selectionStart - ix) % 3);
+         const newValue = s.substring(0, selectionStart) + SPACES[spaces] + s.substring(selectionEnd);
+         props.onChange(newValue);
+         if (textArea.current) {
+           textArea.current.value = newValue;
+           textArea.current.selectionStart = textArea.current.selectionEnd = selectionStart + spaces;
+         }
+       }
+   }
+
+   return <textarea ref={textArea} onKeyDown={onKeyDown} onChange={e => props.onChange(e.target.value)} value={props.value} />;
+ }
+
+
+function Main(props: MainProps) {
    let title = props.title.replace(/_/g, " ");
    return (
       <div className="main">
          <div className="main-title">{title}</div>
          {props.editing ? <>
             <div className="main-edit">
-               <textarea onChange={ev => props.onText(ev.target.value || "")} value={props.markdown} />
+               <TextArea onChange={props.onText} value={props.markdown} />
             </div>
          </> : <>
-            <div className="main-content">
-               <div className="markdown-body" dangerouslySetInnerHTML={{__html: props.html}} onClick={props.onClick}></div>
-            </div>
-         </>}
+               <div className="main-content">
+                  <div className="markdown-body" dangerouslySetInnerHTML={{__html: props.html}} onClick={props.onClick}></div>
+               </div>
+            </>}
       </div>
    );
 };
@@ -71,7 +114,7 @@ class App extends React.PureComponent<PropsDerived> {
       let {title, isEditing, markdown, html, sidebarHtml, isDirty} = this.props;
       return (
          <div className={"overall " + (isDarkTheme() ? "dark" : "") + (isDirty ? " dirty" : "")}>
-            <Sidebar html={sidebarHtml} onEdit={this.onStartEditing} onDone={onDone} onTheme={this.onToggleDark} editing={isEditing}/>
+            <Sidebar html={sidebarHtml} onEdit={this.onStartEditing} onDone={onDone} onTheme={this.onToggleDark} editing={isEditing} />
             <Main html={html} markdown={markdown} title={title} onText={onText} onClick={this.onContentClick} editing={isEditing} />
          </div>
       );
@@ -81,8 +124,8 @@ class App extends React.PureComponent<PropsDerived> {
       AppStore.actions.setEditing({editing: true});
    }
 
-   onContentClick = (e:any) => {
-      let t:HTMLElement|null = e.target;
+   onContentClick = (e: any) => {
+      let t: HTMLElement | null = e.target;
       while (t) {
          let n = t.getAttribute("data-line");
          if (n !== null && typeof n != undefined) {
@@ -97,7 +140,7 @@ class App extends React.PureComponent<PropsDerived> {
       this.forceUpdate();
    }
 
-   toggleChecked(lineNum:number) {
+   toggleChecked(lineNum: number) {
       let lines = this.props.markdown.split("\n");
       let matches = /^([^[]+) \[([xX ])\] (.*)$/.exec(lines[lineNum]);
       if (matches) {
@@ -107,7 +150,7 @@ class App extends React.PureComponent<PropsDerived> {
          mid = (mid == " ") ? "x" : " ";
          suffix = suffix.replace(/^~(.*)~$/, "$1");
          if (mid == "x") suffix = "~" + suffix + "~";
-         lines[lineNum] = prefix + " [" + mid + "] " + suffix; 
+         lines[lineNum] = prefix + " [" + mid + "] " + suffix;
          onText(lines.join("\n"));
       }
    }
@@ -147,19 +190,19 @@ function wait(tm: number) {
    });
 }
 
-let autosaveTimeout:number = 0;
+let autosaveTimeout: number = 0;
 let lastLoad = "";
 let lastLoadTime = 0;
 
-async function onText(s:string) {
-   if (autosaveTimeout) { clearTimeout(autosaveTimeout); autosaveTimeout = 0; }
-   AppStore.actions.setMarkdown({ markdown: s});
+async function onText(s: string) {
+   if (autosaveTimeout) {clearTimeout(autosaveTimeout); autosaveTimeout = 0;}
+   AppStore.actions.setMarkdown({markdown: s});
    if (!AppStore.data.isEditing) {
       await save();
       await asyncHtml(true);
       if (path() == "Sidebar") await asyncSidebarHtml(true);
    } else {
-      autosaveTimeout = window.setTimeout(autosave, 1000*5);
+      autosaveTimeout = window.setTimeout(autosave, 1000 * 5);
       AppStore.actions.setAutosaveStatus({status: Status.WAITING});
    }
 }
@@ -185,7 +228,7 @@ async function save() {
 }
 
 async function onDone() {
-   if (autosaveTimeout) { clearTimeout(autosaveTimeout); autosaveTimeout = 0; }
+   if (autosaveTimeout) {clearTimeout(autosaveTimeout); autosaveTimeout = 0;}
    switch (AppStore.data.autosaveStatus) {
       case Status.OK:
          await asyncHtml(true);
