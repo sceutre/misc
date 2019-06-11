@@ -11,20 +11,20 @@
 #define empty(e) (e.key = NULL)
 #define fill(e,k,h,value) (e.data = value, e.key=k, e.hash=h)
 
-Map *map_new() {
-   Map * m = calloc(1, sizeof(Map));
+Map map_new() {
+   Map m = calloc(1, sizeof(*m));
    map_init(m);
    return m;
 }
 
-void map_init(Map *m) {
+void map_init(Map m) {
    m->data = calloc(INITIAL_SIZE, sizeof(MapElement));
    m->capacity = INITIAL_SIZE;
    m->size = 0;
 }
 
-void map_reset(Map *map) {
-   MapElement *elem = map->data;
+void map_reset(Map map) {
+   MapElement elem = map->data;
    for (int i=0; i<map->capacity; i++) {
       elem[i].data = NULL;
       elem[i].key = NULL;
@@ -33,8 +33,8 @@ void map_reset(Map *map) {
    map->size = 0;
 }
 
-void map_iterate(Map *map, MapCallbackFn fn, void *arg) {
-   MapElement *elem = map->data;
+void map_iterate(Map map, MapCallbackFn fn, void *arg) {
+   MapElement elem = map->data;
    for (int i=0; i<map->capacity; i++) {
       if (!isempty(elem[i])) {
          bool keepGoing = fn(elem[i].key, elem[i].data, arg);
@@ -43,19 +43,19 @@ void map_iterate(Map *map, MapCallbackFn fn, void *arg) {
    }
 }
 
-void map_free(Map *map) {
+void map_free(Map map) {
    free(map->data);
    free(map);
 }
 
-int map_length(Map *map) {
+int map_length(Map map) {
    return map->size;
 }
 
-static int indexOf(Map *map, char *key) {
+static int indexOf(Map map, char *key) {
    if (map->capacity == 0) return -1;
    unsigned long h = hashString(key);
-   MapElement *array = map->data;
+   MapElement array = map->data;
    int mask = map->capacity - 1;
    int i = h & mask;
    while (true) {
@@ -65,8 +65,8 @@ static int indexOf(Map *map, char *key) {
    }
 }
 
-static void grow(Map *map) {
-   MapElement *old = map->data;
+static void grow(Map map) {
+   MapElement old = map->data;
    int n = map->capacity;
    map->capacity *= 2;
    map->data = calloc(map->capacity, sizeof(MapElement));
@@ -79,9 +79,9 @@ static void grow(Map *map) {
    free(old);
 }
 
-bool map_put(Map *map, char *key, void *value) {
+bool map_put(Map map, char *key, void *value) {
    unsigned long h = hashString(key);
-   MapElement *array = map->data;
+   MapElement array = map->data;
    int mask = map->capacity - 1;
    int i = h & mask;
    while (true) {
@@ -103,15 +103,15 @@ bool map_put(Map *map, char *key, void *value) {
 }
 
 
-void *map_get(Map *map, char *key) {
+void *map_get(Map map, char *key) {
    int ix = indexOf(map, key);
    return ix < 0 ? NULL : map->data[ix].data;
 }
 
-bool map_delete(Map *map, char *key) {
+bool map_delete(Map map, char *key) {
    int i = indexOf(map, key);
    if (i < 0) return false;
-   MapElement *array = map->data;
+   MapElement array = map->data;
    int mask = map->capacity - 1;
 
    int j = i;
@@ -128,7 +128,7 @@ bool map_delete(Map *map, char *key) {
    return true;
 }
 
-void map_putall(Map *map, ...) {
+void map_putall(Map map, ...) {
    va_list args;
    va_start(args, map);
    while (true) {
@@ -140,7 +140,7 @@ void map_putall(Map *map, ...) {
    va_end(args);
 }
 
-void map_parseCLI(Map *options, char **argv, int argc) {
+void map_parseCLI(Map options, char **argv, int argc) {
    for (int i = 1; i < argc; i++) {
       char *p = argv[i];
       if (*(p++) == '-' && *(p++) == '-') {

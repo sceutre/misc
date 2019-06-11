@@ -3,18 +3,18 @@
 
 #include <stdbool.h>
 
-typedef struct {
+typedef struct QueueStruct {
    int maxItems;
    int count;
    void **items;
    int head;
    int tail;
-} Queue;
+} *Queue;
 
-Queue *queue_new(int maxNumItems);
-bool queue_prepend(Queue *queue, void *item);
-bool queue_append(Queue *queue, void *item);
-void *queue_popFirst(Queue *queue);
-void *queue_popLast(Queue *queue);
+Queue queue_new(int maxNumItems);
+bool queue_prepend(Queue queue, void *item);
+bool queue_append(Queue queue, void *item);
+void *queue_popFirst(Queue queue);
+void *queue_popLast(Queue queue);
 
 #endif

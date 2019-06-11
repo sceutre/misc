@@ -1,8 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 #include "queue.h"
 
-Queue *queue_new(int maxNumItems) {
-   Queue *q = malloc(sizeof(Queue));
+Queue queue_new(int maxNumItems) {
+   Queue q = malloc(sizeof(*q));
    q->head = q->tail = q->count = 0;
    q->maxItems = maxNumItems;
    q->items = malloc(maxNumItems * sizeof(void *));
@@ -10,7 +13,7 @@ Queue *queue_new(int maxNumItems) {
    return q;
 }
 
-bool queue_prepend(Queue *queue, void *item) {
+bool queue_prepend(Queue queue, void *item) {
    if (queue->count >= queue->maxItems) return false;
    queue->count++;
    queue->head = ((queue->head - 1) + queue->maxItems) % queue->maxItems;
@@ -18,7 +21,7 @@ bool queue_prepend(Queue *queue, void *item) {
    return true;
 }
 
-bool queue_append(Queue *queue, void *item) {
+bool queue_append(Queue queue, void *item) {
    if (queue->count >= queue->maxItems) return false;
    queue->count++;
    queue->items[queue->tail] = item;
@@ -26,7 +29,7 @@ bool queue_append(Queue *queue, void *item) {
    return true;
 }
 
-void *queue_popFirst(Queue *queue) {
+void *queue_popFirst(Queue queue) {
    if (queue->count <= 0) return NULL;
    void *p = queue->items[queue->head];
    queue->items[queue->head] = NULL;
@@ -35,7 +38,7 @@ void *queue_popFirst(Queue *queue) {
    return p;
 }
 
-void *queue_popLast(Queue *queue) {
+void *queue_popLast(Queue queue) {
    if (queue->count <= 0) return NULL;
    queue->tail = ((queue->tail - 1) + queue->maxItems) % queue->maxItems;
    void *p = queue->items[queue->tail];

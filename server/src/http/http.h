@@ -1,7 +1,10 @@
 #if !defined(HTTP_H)
 #define HTTP_H
 
-#include "../utils/utils.h"
+#include <stdbool.h>
+#include "../utils/map.h"
+#include "../utils/sockets.h"
+#include "../utils/bytearray.h"
 
 #define H_CONTENT_LENGTH "Content-Length"
 #define H_CONTENT_TYPE "Content-Type"
@@ -19,29 +22,29 @@
 #define H_LOCALPATH "<localpath>"
 #define H_VERSION "<version>"
 
-typedef struct {
+typedef struct HttpContextStruct {
    char undoChar;
    Map requestHeaders;
    Map responseHeaders;
-   char *requestBody;
-   char *responseBody;
-   CommsSocket *socket;
-   void *callback;
+   Bytearray requestBody;
+   Bytearray responseBody;
+   CommsSocket socket;
+   void (*callback)(struct HttpContextStruct *ctx, bool isDone);
    bool closeDesired;
-} HttpContext;
+} *HttpContext;
 
-typedef void (*HttpCallback)(HttpContext *ctx, bool isDone);
+typedef void (*HttpCallbackFn)(HttpContext ctx, bool isDone);
 
-void http_request(HttpContext *ctx);
-void http_send(HttpContext *ctx);
-void http_sendEx(HttpContext *ctx, int contentLength, bool firstChunk);
-void http_response_headers(HttpContext *ctx, int status, boolean cache, char *mime);
+void http_request(HttpContext ctx);
+void http_send(HttpContext ctx);
+void http_sendEx(HttpContext ctx, int contentLength, bool firstChunk);
+void http_response_headers(HttpContext ctx, int status, bool cache, char *mime);
 
-#define put_req(ctx, key, val) map_put(&(ctx->requestHeaders), key, val)
-#define put_resp(ctx, key, val) map_put(&(ctx->responseHeaders), key, val)
-#define get_req(ctx, key) map_get(&(ctx->requestHeaders), key)
-#define get_resp(ctx, key) map_get(&(ctx->responseHeaders), key)
-#define foreach_req(ctx, fn) map_iterate(&(ctx->requestHeaders), fn, ctx)
-#define foreach_resp(ctx, fn) map_iterate(&(ctx->responseHeaders), fn, ctx)
+#define put_req(ctx, key, val) map_put(ctx->requestHeaders, key, val)
+#define put_resp(ctx, key, val) map_put(ctx->responseHeaders, key, val)
+#define get_req(ctx, key) map_get(ctx->requestHeaders, key)
+#define get_resp(ctx, key) map_get(ctx->responseHeaders, key)
+#define foreach_req(ctx, fn) map_iterate(ctx->requestHeaders, fn, ctx)
+#define foreach_resp(ctx, fn) map_iterate(ctx->responseHeaders, fn, ctx)
 
 #endif  // HTTP_H

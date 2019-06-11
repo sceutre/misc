@@ -13,12 +13,12 @@ typedef void *Signal;
 typedef void *Thread;
 #endif
 
-typedef struct {
+typedef struct LocalStorageStruct {
    char *buffer;
    int ix;
    char *error;
    Thread thread;
-} LocalStorageStruct, *LocalStorage;
+} *LocalStorage;
 
 typedef void (*CallbackFn)();
 

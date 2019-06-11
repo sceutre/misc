@@ -1,12 +1,18 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 #include "mime.h"
+#include "../utils/map.h"
+#include "../utils/utils.h"
 
-Map mimeTypes = {0, 0, NULL};
+Map mimeTypes = NULL;
 
-#define put(x, y) map_put(&(mimeTypes), x, y)
-#define get(x) map_get(&(mimeTypes), x)
+#define put(x, y) map_put(mimeTypes, x, y)
+#define get(x) map_get(mimeTypes, x)
 
 void mimeInit() {
-   map_init(&mimeTypes);
+   mimeTypes = map_new();
    put("aac", "audio/aac");
    put(".bmp", "image/bmp");
    put(".css", "text/css");

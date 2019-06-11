@@ -1,5 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <ctype.h>
+#include "concurrency.h"
 #include "utils.h"
+#include "log.h"
 
 char *strstrIgnoreCase(char *haystack, char *needle) {
    while (true) {

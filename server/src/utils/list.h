@@ -1,10 +1,9 @@
 #ifndef LIST_H
 #define LIST_H
 
+#include <stdlib.h>
 #include <stdbool.h>
-
-#define GROW_16 1
-#define GROW_DOUBLE 2
+#include "utils.h"
 
 typedef bool (*ElementFn)(void *element);
 
@@ -30,5 +29,15 @@ void list_foreach(List list, ElementFn elementFn);
 static inline void *list_get(List list, int i) {
    return ((char *)list->elements) + i * list->sizeofElem;
 }
+
+static inline void list_grow(List list, int needed) {
+   if (list->size < needed) {
+      int newSize = growSize(list->capacity, needed, list->growMode);
+      list->elements = realloc(list->elements, newSize * list->sizeofElem);
+      list->capacity = newSize;
+   }
+}
+
+void list_setFnCStrings(List list, void *element, int i);
 
 #endif

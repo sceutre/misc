@@ -1,3 +1,9 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include "../utils/concurrency.h"
+#include "../utils/map.h"
+#include "../utils/log.h"
 #include "tests.h"
 
 static void testExceptionsB() {
@@ -29,7 +35,7 @@ static void testExceptions() {
 }
 
 static void testMap() {
-   Map *map = map_new();
+   Map map = map_new();
    map_put(map, "foo", "bar");
    map_put(map, "red", "blue");
    map_put(map, "one", "two");

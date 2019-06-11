@@ -21,17 +21,17 @@ typedef struct {
    int id;
 } *Thread;
 
-typedef struct {
-   LocalStorageStruct storage;
-   List jumpBuffers;
-} PerThread;
-
 #include "concurrency.h"
+
+struct PerThread {
+   struct LocalStorageStruct storage;
+   List jumpBuffers;
+};
 
 #define THREAD_BUFFER_SIZE 20 * 1024
 #define MAX_THREADS 50
 
-PerThread locals[MAX_THREADS];
+struct PerThread locals[MAX_THREADS];
 Mutex threadStartMutex = NULL;
 
 static int indexOfLocal(unsigned int id);
@@ -131,7 +131,7 @@ static LocalStorage initThread(unsigned int threadId) {
          locals[i].storage.thread->osId = threadId;
          locals[i].storage.thread->id = i;
          locals[i].jumpBuffers = list_new(5, sizeof(jmp_buf*), setJumpBufs);
-         return locals + i;
+         return &(locals[i].storage);
       }
    }
    return NULL;

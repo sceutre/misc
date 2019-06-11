@@ -89,7 +89,7 @@ CommsSocket socket_listen(ListenSocket s) {
    }
 }
 
-bool socket_write(CommsSocket p, const char *data, int len) {
+bool socket_write(CommsSocket p, const unsigned char *data, int len) {
    send(p->socket, data, len, 0);
    return true;  // TODO actually see if it was as success
 }

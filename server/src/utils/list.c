@@ -9,12 +9,12 @@ static void basicFreeFn(void *elem) {
 
 List list_new(int initialSize, int sizeofElement, SetElementFn setFn) {
    List list = malloc(sizeof *list);
-   list->capacity = initialSize;
+   list->capacity = 0;
    list->size = 0;
-   list->elements = (initialSize > 0) ? calloc(initialSize, sizeofElement) : NULL;
-   list->setFn = setFn;
-   list->growMode = GROW_DOUBLE;
+   list->growMode = GROW_MODE_HALFAGAIN;
    list->sizeofElem = sizeofElement;
+   list->setFn = setFn;
+   list_grow(list, initialSize);
    return list;
 }
 
@@ -24,11 +24,7 @@ void list_free(List list) {
 }
 
 void list_push(List list, void *element) {
-   if (list->size == list->capacity) {
-      int newSize = list->growMode == GROW_DOUBLE ? growSize(list->capacity, list->size + 1) : list->size + 16;
-      list->elements = realloc(list->elements, newSize * list->sizeofElem);
-      list->capacity = newSize;
-   }
+   list_grow(list, list->size + 1);
    list->setFn(list, element, list->size++);
 }
 
@@ -60,7 +56,12 @@ void list_remove_ix(List list, int ix) {
 void list_foreach(List list, ElementFn elementFn) {
    int n = list->size--;
    int sz = list->sizeofElem;
-   void *e;
+   void *e = list->elements;
    for (int i = 0; i < n; i++) 
       if (!elementFn(e + i*sz)) break;
+}
+
+void list_setFnCStrings(List list, void *element, int i) {
+   char *str = element;
+   ((char **)list->elements)[i] = str;
 }

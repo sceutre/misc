@@ -9,6 +9,7 @@ Bytearray bytearray_new(int initialSize) {
    s->bytes = initialSize == 0 ? NULL : malloc(initialSize);
    s->capacity = initialSize;
    s->size = 0;
+   s->growMode = GROW_MODE_HALFAGAIN;
    return s;
 }
 
@@ -17,22 +18,15 @@ void bytearray_free(Bytearray s) {
    free(s);
 }
 
-void bytearray_append(Bytearray s, unsigned char c) {
-   if (s->size == s->capacity) {
-      int newSize = growSize(s->capacity, s->size + 1);
-      s->bytes = realloc(s->bytes, newSize);
-      s->capacity = newSize;
-   }
+void bytearray_append(Bytearray s, const char c) {
+   bytearray_grow(s, s->size + 1);
    s->bytes[s->size++] = c;
 }
 
-void bytearray_append_all(Bytearray s, unsigned char *c, int n) {
-   if (s->size == s->capacity) {
-      int newSize = growSize(s->capacity, s->size + 1);
-      s->bytes = realloc(s->bytes, newSize);
-      s->capacity = newSize;
-   }
-   s->bytes[s->size++] = c;
+void bytearray_append_all(Bytearray s, const unsigned char *c, int n) {
+   bytearray_grow(s, s->size + n);
+   unsigned char *b = s->bytes + s->size;
+   for (int i = 0; i < n; i++) b[i] = c[i];
 }
 
 Bytearray bytearray_readfile(char *filename) {
@@ -55,4 +49,8 @@ void bytearray_writefile(Bytearray contents, char *filename) {
    FILE *fp = fopen(filename, "wb");
    fwrite(contents->bytes, 1, contents->size, fp);
    fclose(fp);
+}
+
+void bytearray_reset(Bytearray bytes) {
+   bytes->size = 0;
 }

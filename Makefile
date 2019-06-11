@@ -5,7 +5,7 @@ INSTALL_DIR := ../../apps/Misc
 
 CC := gcc
 CFLAGS = -std=c99 -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d 
-CFLAGS += -fPIC -DNO_SSL -Wall -Wno-unused-variable -Wno-unused-function -Werror
+CFLAGS += -fPIC -DNO_SSL -Wall -Wno-unused-variable -Wno-unused-function -Wno-pointer-sign -Werror
 
 EXE := $(BIN_DIR)/misc.exe
 JS := $(BIN_DIR)/srcroot/prod/bundle.js
