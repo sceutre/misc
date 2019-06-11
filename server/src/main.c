@@ -1,4 +1,9 @@
+#include "utils/os-windows.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include "utils/utils.h"
+#include "utils/bytearray.h"
+#include "utils/concurrency.h"
 #include "http/web.h"
 #include "http/files.h"
 #include "tests/tests.h"
@@ -28,24 +33,15 @@ static char *normalizedPath(const char *dir, char *file, const char *ext) {
    return t_printf("%s/%s%s%s", dir, file, ext ? "." : "", ext ? ext : "");
 }
 
-static char *hPath(char *dir, char *file) {
-   int dlen, flen;
-   char *res = malloc((dlen = strlen(dir)) + (flen = strlen(file)) + 2);
-   memcpy(res, dir, dlen);
-   memcpy(res + dlen + 1, file, flen);
-   res[dlen] = '\\';
-   res[dlen + 1 + flen] = 0;
-   return res;
+static Bytearray hPath(char *dir, char *file) {
+   Bytearray ba = bytearray_new(0);
+   bytearray_append_all(ba, dir, strlen(dir));
+   bytearray_append_all(ba, "\\", 1);
+   bytearray_append_all(ba, file, strlen(dir));
+   bytearray_append(ba, 0);
+   return ba;
 }
 
-// static bool upload_save(HttpContext *ctx, void *arg) {
-//    char *filename = normalizedPath(uploadRoot, map_get_text(&(ctx->requestHeaders), H_LOCALPATH), NULL);
-//    sb_write_file(ctx->requestBody, filename);
-//    http_response_headers(ctx, 200, false, "text/plain");
-//    sb_push_all(ctx->responseBody, "Success", 7);
-//    http_send(ctx);
-//    return true;
-// }
 
 static void saveMD(const char *text, unsigned int size, void *userdata) {
    HttpContext *ctx = userdata;
@@ -147,10 +143,9 @@ char **getEnvOpts() {
 }
 
 int main(int argc, char **argv) {
-   MenuItem *items = NULL;
-   win_pushMenuItem(items, "Open", showHome);
-   win_pushMenuItem(items, "Open", showHome);
-   win_pushMenuItem(items, "Exit", win_exit);
+   win_pushMenuItem("Open", showHome);
+   win_pushMenuItem("Open", showHome);
+   win_pushMenuItem("Exit", win_exit);
    mimeInit();
    t_init();
 
@@ -160,8 +155,8 @@ int main(int argc, char **argv) {
       srcRoot = hPath(exeLoc, "srcroot");
       map_putall(opt, "port", "7575", "ext", "", "out", hPath(exeLoc, "data"), "localhost", "localhost", "debug", "0", NULL);
       char **envOpts = getEnvOpts();
-      parseArgv(opt, envOpts, sb_count(envOpts));
-      parseArgv(opt, argv, argc);
+      map_parseCLI(opt, envOpts, sb_count(envOpts));
+      map_parseCLI(opt, argv, argc);
       port = toInt(map_get(opt, "port"));
       dataRoot = map_get(opt, "out");
       debugMode = toInt(map_get(opt, "debug"));

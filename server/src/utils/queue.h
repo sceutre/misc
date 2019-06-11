@@ -1,7 +1,7 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#include "headers.h"
+#include <stdbool.h>
 
 typedef struct {
    int maxItems;

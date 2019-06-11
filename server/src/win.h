@@ -1,8 +1,6 @@
 #ifndef MY_WIN32_H
 #define MY_WIN32_H
 
-#include "utils/utils.h"
-
 typedef void (*MenuFn)();
 
 typedef struct {
@@ -10,13 +8,8 @@ typedef struct {
    MenuFn callback;
 } MenuItem;
 
-#define win_pushMenuItem(items, name, callback) \
-   do {                                         \
-      MenuItem it = {name, callback};           \
-      sb_push(items, it);                       \
-   } while (0)
-
-void win_run(MenuItem *items, char *ico);
+void win_pushMenuItem(char *name, MenuFn callback);
+void win_run(char *ico);
 void win_exit();
 
 #endif

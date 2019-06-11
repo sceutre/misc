@@ -1,20 +1,5 @@
+#include <stdio.h>
 #include "utils.h"
-
-int min(int a, int b) {
-   return a < b ? a : b;
-}
-
-int max(int a, int b) {
-   return a < b ? b : a;
-}
-
-bool contains(char *haystack, char *needle) {
-   return strstr(haystack, needle) != NULL;
-}
-
-bool containsIgnoreCase(char *haystack, char *needle) {
-   return strstrIgnoreCase(haystack, needle) != NULL;
-}
 
 char *strstrIgnoreCase(char *haystack, char *needle) {
    while (true) {
@@ -84,25 +69,6 @@ void lowercase(char *src, char *dest, int n) {
    }
 }
 
-char **parseArgv(Map *options, char **argv, int argc) {
-   char **nonOptions = NULL;
-   for (int i = 1; i < argc; i++) {
-      char *p = argv[i];
-      if (*(p++) == '-' && *(p++) == '-') {
-         char *val = map_get(options, p);
-         if (val != NULL) {
-            i++;
-            if (i < argc) {
-               map_put(options, p, argv[i]);
-               continue;
-            }
-         }
-      }
-      sb_push(nonOptions, argv[i]);
-   }
-   return nonOptions;
-}
-
 int toInt(char *str) {
    char *end;
    long res = strtol(str, &end, 10);
@@ -127,3 +93,4 @@ int findAll(char *haystack, char c, int *array, int size) {
    }
    return foundIx;
 }
+

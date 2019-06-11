@@ -20,7 +20,12 @@
  * IN THE SOFTWARE.
  */
 
+#include "os-windows.h"
+#include <stdio.h>
+#include <stdbool.h>
 #include "log.h"
+#include "concurrency.h"
+#include "utils.h"
 
 typedef struct {
    FILE *fp;
@@ -74,7 +79,7 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
    }
    if (L.fp != NULL) {
       va_start(args, fmt);
-      fprintf(L.fp, "%s[%d] %02d:%02d:%02d.%03d %-5s ", lineInfoP, t_local()->thread.id, lt.wHour, lt.wMinute, lt.wSecond, lt.wMilliseconds,
+      fprintf(L.fp, "%s[%d] %02d:%02d:%02d.%03d %-5s ", lineInfoP, t_threadId(), lt.wHour, lt.wMinute, lt.wSecond, lt.wMilliseconds,
               level_names[level]);
       vfprintf(L.fp, fmt, args);
       va_end(args);

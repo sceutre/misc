@@ -1,4 +1,8 @@
+#include "utils/os-windows.h"
+#include <stdio.h>
+#include <stdbool.h>
 #include "win.h"
+#include "utils/list.h"
 
 #define ICON_ID 1
 #define TRAY_MESSAGE (WM_APP + 1)
@@ -8,16 +12,30 @@
 
 static NOTIFYICONDATA notifyIconData;
 static HWND hWnd;
-static MenuItem *items;
+static List items = NULL;
 static char *icoFile;
+
+static void setFn(List list, void *element, int i) {
+   MenuItem *mi = element;
+   ((MenuItem *)list->elements)[i] = *mi;
+}
+
+void win_pushMenuItem(char *name, MenuFn callback) {
+   if (items == NULL) {
+      items = list_new(10, sizeof(MenuItem), setFn);
+   }
+   MenuItem mi = { name, callback };
+   list_push(items, &mi);
+}
 
 static void showContextMenu(HWND hWnd) {
    POINT pt;
    GetCursorPos(&pt);
    HMENU hMenu = CreatePopupMenu();
    if (hMenu) {
-      for (int i = 1; i < sb_count(items); i++) {
-         InsertMenu(hMenu, -1, MF_BYPOSITION, MENU_START + i, items[i].menuText);
+      for (int i = 1; i < items->size; i++) {
+         MenuItem *p = list_get(items, i);
+         InsertMenu(hMenu, -1, MF_BYPOSITION, MENU_START + i, p->menuText);
       }
       SetForegroundWindow(hWnd);
       TrackPopupMenu(hMenu, TPM_BOTTOMALIGN, pt.x, pt.y, 0, hWnd, NULL);
@@ -36,14 +54,14 @@ static LRESULT CALLBACK appWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                showContextMenu(hWnd);
                break;
             case WM_LBUTTONDBLCLK:
-               items[0].callback();
+               ((MenuItem *)items->elements)->callback();
                break;
          }
          break;
       case WM_COMMAND:
          ix = LOWORD(wParam);
          ix -= MENU_START;
-         items[ix].callback();
+         ((MenuItem *)items)[ix].callback();
          return 1;
       case WM_DESTROY:
          notifyIconData.uFlags = 0;
@@ -95,9 +113,8 @@ void win_exit() {
    DestroyWindow(hWnd);
 }
 
-void win_run(MenuItem *it, char *ico) {
+void win_run(char *ico) {
    MSG msg;
-   items = it;
    icoFile = ico;
    if (!init()) return;
    while (GetMessage(&msg, NULL, 0, 0)) {

@@ -1,18 +1,41 @@
-#include "sockets.h"
+#include "os-windows.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #include "concurrency.h"
+#include "log.h"
+
+#define SOCKETS_IMPL
+#define SOCKET_READ_BUFFER_SZ 8192
+
+typedef struct {
+   SOCKET socket;
+   int port;
+} *ListenSocket;
+
+typedef struct {
+   SOCKET socket;
+   char buf[SOCKET_READ_BUFFER_SZ];
+   int ix;
+   int length;
+   bool eof;
+} *CommsSocket;
+
+#include "sockets.h"
 
 #define POOL_SIZE 10
 
-static CommsSocket *getCommsSocket();
+static CommsSocket getCommsSocket();
 
-static CommsSocket *socketPool[POOL_SIZE];
+static CommsSocket socketPool[POOL_SIZE];
 static bool initialized = false;
-static Mutex *poolMutex;
+static Mutex poolMutex;
 
 static void init() {
    if (!initialized) {
       for (int i = 0; i < POOL_SIZE; i++) {
-         socketPool[i] = malloc(sizeof(CommsSocket));
+         CommsSocket cs = malloc(sizeof(*cs));
+         socketPool[i] = cs;
       }
       WSADATA wsa;
       if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
@@ -24,7 +47,7 @@ static void init() {
    }
 }
 
-ListenSocket *socket_new(int port) {
+ListenSocket socket_new(int port) {
    init();
    SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
    if (s == INVALID_SOCKET) {
@@ -40,13 +63,13 @@ ListenSocket *socket_new(int port) {
       exit(EXIT_FAILURE);
    }
    listen(s, 16);
-   ListenSocket *p = malloc(sizeof(ListenSocket));
+   ListenSocket p = malloc(sizeof(*p));
    p->port = port;
    p->socket = s;
    return p;
 }
 
-CommsSocket *socket_listen(ListenSocket *s) {
+CommsSocket socket_listen(ListenSocket s) {
    while (true) {
       SOCKET newConn = accept(s->socket, NULL, NULL);
       if (newConn == INVALID_SOCKET) {
@@ -59,19 +82,19 @@ CommsSocket *socket_listen(ListenSocket *s) {
             exit(EXIT_FAILURE);
          }
       } else {
-         CommsSocket *p = getCommsSocket();
+         CommsSocket p = getCommsSocket();
          p->socket = newConn;
          return p;
       }
    }
 }
 
-bool socket_write(CommsSocket *p, const char *data, int len) {
+bool socket_write(CommsSocket p, const char *data, int len) {
    send(p->socket, data, len, 0);
    return true;  // TODO actually see if it was as success
 }
 
-char socket_read(CommsSocket *p) {
+char socket_read(CommsSocket p) {
    if (p->eof) return READ_EOF;
    if (p->ix >= p->length) {
       if (p->length + 10 >= SOCKET_READ_BUFFER_SZ) {
@@ -89,7 +112,7 @@ char socket_read(CommsSocket *p) {
    return p->buf[p->ix++];
 }
 
-void socket_close(CommsSocket *p) {
+void socket_close(CommsSocket p) {
    closesocket(p->socket);
    p->ix = 0;
    p->length = 0;
@@ -105,8 +128,8 @@ void socket_close(CommsSocket *p) {
    if (!found) free(p);
 }
 
-static CommsSocket *getCommsSocket() {
-   CommsSocket *found = NULL;
+static CommsSocket getCommsSocket() {
+   CommsSocket found = NULL;
    mutex_lockRW(poolMutex);
    for (int i = 0; i < POOL_SIZE && found == NULL; i++) {
       if (socketPool[i] != NULL) {
@@ -119,7 +142,7 @@ static CommsSocket *getCommsSocket() {
    }
    mutex_unlockRW(poolMutex);
    if (found != NULL) return found;
-   CommsSocket *p = malloc(sizeof(CommsSocket));
-   memset(p, 0, sizeof(CommsSocket));
+   CommsSocket p = malloc(sizeof(*p));
+   memset(p, 0, sizeof(*p));
    return p;
 }

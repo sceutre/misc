@@ -1,3 +1,8 @@
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include "map.h"
 #include "utils.h"
 
 #define INITIAL_SIZE 64
@@ -133,4 +138,20 @@ void map_putall(Map *map, ...) {
       map_put(map, key, val);
    }
    va_end(args);
+}
+
+void map_parseCLI(Map *options, char **argv, int argc) {
+   for (int i = 1; i < argc; i++) {
+      char *p = argv[i];
+      if (*(p++) == '-' && *(p++) == '-') {
+         char *val = map_get(options, p);
+         if (val != NULL) {
+            i++;
+            if (i < argc) {
+               map_put(options, p, argv[i]);
+               continue;
+            }
+         }
+      }
+   }
 }

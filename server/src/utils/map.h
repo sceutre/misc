@@ -25,6 +25,7 @@ void map_putall(Map *map, ...);
 bool map_delete(Map *map, char *key);
 void *map_get(Map *map, char *key);
 int map_length(Map *map);
+void map_parseCLI(Map *options, char **argv, int argc);
 
 #define map_get_text(map,key) ((char *)map_get(map,key))
 #define map_put_text(map,key, value) ((map_put(map,key, (void *)value))

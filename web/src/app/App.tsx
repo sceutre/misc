@@ -59,7 +59,7 @@ function TextArea(props:TextAreaProps) {
          const { selectionStart, selectionEnd } = e.currentTarget;
          let s = props.value;
          let ix = s.lastIndexOf("\n", selectionStart) + 1;
-         let spaces = 3 - ((selectionStart - ix) % 3);
+         let spaces = ix > selectionStart ? 3 : (3 - ((selectionStart - ix) % 3));
          const newValue = s.substring(0, selectionStart) + SPACES[spaces] + s.substring(selectionEnd);
          props.onChange(newValue);
          if (textArea.current) {

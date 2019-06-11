@@ -1,7 +1,7 @@
 #ifndef LOG_H
 #define LOG_H
 
-#include "utils.h"
+#include <stdbool.h>
 
 #define LOG_VERSION "0.1.0"
 

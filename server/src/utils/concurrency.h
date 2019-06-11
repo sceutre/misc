@@ -1,33 +1,24 @@
 #ifndef CONCURRENCY_H
 #define CONCURRENCY_H
 
-#include "headers.h"
+#include <setjmp.h>
 
 #ifndef THROW_QUIETLY
 #define THROW_QUIETLY 0
 #endif 
 
-typedef struct {
-   SRWLOCK srwLock;
-} Mutex;
-
-typedef struct {
-   HANDLE semaphore;
-} Signal;
-
-typedef struct {
-   HANDLE handle;
-   unsigned int osId;
-   int id;
-} Thread;
+#ifndef CONCURRENCY_IMPL
+typedef void *Mutex;
+typedef void *Signal;
+typedef void *Thread;
+#endif
 
 typedef struct {
    char *buffer;
    int ix;
    char *error;
    Thread thread;
-   jmp_buf **jumpBuffers;
-} LocalStorage;
+} LocalStorageStruct, *LocalStorage;
 
 typedef void (*CallbackFn)();
 
@@ -41,20 +32,21 @@ bool t_wait(int id, int millis);
 #define t_printf _threadLocalPrintf
 #define t_accum(buf,c) do { if (buf == NULL) buf = _threadLocalAccum(c); else _threadLocalAccum(c); } while (0)
 void t_reset();
+int t_threadId();
 
-LocalStorage *t_local();
+LocalStorage t_local();
 
-void _mutexAcquire(Mutex *m, bool readOnly);
-void _mutexRelease(Mutex *m, bool readOnly);
-Mutex *mutex_new();
+void _mutexAcquire(Mutex m, bool readOnly);
+void _mutexRelease(Mutex m, bool readOnly);
+Mutex mutex_new();
 #define mutex_lockR(mutex) _mutexAcquire(mutex, true)
 #define mutex_lockRW(mutex) _mutexAcquire(mutex, false)
 #define mutex_unlockR(mutex) _mutexRelease(mutex, true)
 #define mutex_unlockRW(mutex) _mutexRelease(mutex, false)
 
-Signal *signal_new();
-void signal_wait(Signal *s);
-void signal_fire(Signal *s);
+Signal signal_new();
+void signal_wait(Signal s);
+void signal_fire(Signal s);
 
 #define try          bool __needCatch = false; if (setjmp(*_threadLocalJumpBuf(true, false)) == 0)
 #define catch        else { __needCatch = true; } _threadLocalJumpBuf(false, true); if (__needCatch)
