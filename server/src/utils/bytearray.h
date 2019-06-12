@@ -20,7 +20,7 @@ void bytearray_free(Bytearray bytes);
 void bytearray_reset(Bytearray bytes);
 
 static inline void bytearray_grow(Bytearray bytes, int needed) {
-   if (bytes->size < needed) {
+   if (bytes->capacity < needed) {
       int newSize = growSize(bytes->capacity, needed, bytes->growMode);
       bytes->bytes = realloc(bytes->bytes, newSize);
       bytes->capacity = newSize;

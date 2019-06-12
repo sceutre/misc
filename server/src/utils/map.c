@@ -18,7 +18,7 @@ Map map_new() {
 }
 
 void map_init(Map m) {
-   m->data = calloc(INITIAL_SIZE, sizeof(MapElement));
+   m->data = calloc(INITIAL_SIZE, sizeof(struct MapElementStruct));
    m->capacity = INITIAL_SIZE;
    m->size = 0;
 }

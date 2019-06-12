@@ -14,7 +14,7 @@ List list_new(int initialSize, int sizeofElement, SetElementFn setFn) {
    list->growMode = GROW_MODE_HALFAGAIN;
    list->sizeofElem = sizeofElement;
    list->setFn = setFn;
-   list_grow(list, initialSize);
+   list_grow(list, initialSize ? initialSize : 16);
    return list;
 }
 

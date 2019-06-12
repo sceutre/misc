@@ -31,7 +31,10 @@ static inline void *list_get(List list, int i) {
 }
 
 static inline void list_grow(List list, int needed) {
-   if (list->size < needed) {
+   if (list->capacity == 0 && needed > 0) {
+      list->elements = malloc(needed * list->sizeofElem);
+      list->capacity = needed;
+   } else if (list->capacity < needed) {
       int newSize = growSize(list->capacity, needed, list->growMode);
       list->elements = realloc(list->elements, newSize * list->sizeofElem);
       list->capacity = newSize;

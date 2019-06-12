@@ -6,7 +6,8 @@
 
 Bytearray bytearray_new(int initialSize) {
    Bytearray s = malloc(sizeof(*s));
-   s->bytes = initialSize == 0 ? NULL : malloc(initialSize);
+   initialSize = initialSize ? initialSize : 16;
+   s->bytes = malloc(initialSize);
    s->capacity = initialSize;
    s->size = 0;
    s->growMode = GROW_MODE_HALFAGAIN;
