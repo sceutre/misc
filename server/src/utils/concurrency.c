@@ -57,8 +57,7 @@ char *_threadLocalPrintf(const char *fmt, ...) {
 char *_threadLocalAccum(char c) {
    LocalStorage st = t_local();
    st->buffer[st->ix] = c;
-   st->ix++;
-   return st->buffer + st->ix;
+   return st->buffer + st->ix++;
 }
 
 void t_reset() {
@@ -116,12 +115,6 @@ int t_start(CallbackFn func) {
    return s->thread->id;
 }
 
-static void setJumpBufs(List list, void *elem, int i) {
-   jmp_buf **bufs = list->elements;
-   jmp_buf *p = elem;
-   bufs[i] = p;
-}
-
 static LocalStorage initThread(unsigned int threadId) {
    for (int i = 0; i < MAX_THREADS; i++) {
       if (locals[i].storage.thread == NULL) {
@@ -130,7 +123,7 @@ static LocalStorage initThread(unsigned int threadId) {
          locals[i].storage.buffer = calloc(THREAD_BUFFER_SIZE, 1);
          locals[i].storage.thread->osId = threadId;
          locals[i].storage.thread->id = i;
-         locals[i].jumpBuffers = list_new(5, sizeof(jmp_buf*), setJumpBufs);
+         locals[i].jumpBuffers = list_new();
          return &(locals[i].storage);
       }
    }
@@ -163,7 +156,7 @@ static unsigned int __stdcall threadStarter(void *func) {
 }
 
 jmp_buf *_threadLocalJumpBuf(bool push, bool pop) {
-   jmp_buf next, *p;
+   jmp_buf *p;
 
    List list = locals[indexOfLocal(GetCurrentThreadId())].jumpBuffers;
    if (push) {
@@ -174,7 +167,7 @@ jmp_buf *_threadLocalJumpBuf(bool push, bool pop) {
       p = list_pop(list);
       free(p);
    }
-   return ((jmp_buf **)list->elements)[list->size - 1];
+   return list->size == 0 ? NULL : list->data[list->size - 1];
 }
 
 int t_threadId() {

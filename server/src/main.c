@@ -55,7 +55,7 @@ static void saveMD(const char *text, unsigned int size, void *userdata) {
 static bool markdownGet(HttpContext ctx, void *arg) {
    char *filename = normalizedPath(dataRoot, get_req(ctx, H_LOCALPATH), "md");
    Bytearray input = bytearray_readfile(filename);
-   md_render_html(input->bytes, input->size, saveMD, ctx, PARSER_FLAGS, RENDER_FLAGS);
+   if (input) md_render_html(input->bytes, input->size, saveMD, ctx, PARSER_FLAGS, RENDER_FLAGS);
    http_response_headers(ctx, 200, false, "text/html");
    http_send(ctx);
    return true;
@@ -64,7 +64,7 @@ static bool markdownGet(HttpContext ctx, void *arg) {
 static bool markdownGetRaw(HttpContext ctx, void *arg) {
    char *filename = normalizedPath(dataRoot,  get_req(ctx, H_LOCALPATH), "md");
    Bytearray input = bytearray_readfile(filename);
-   bytearray_append_all(ctx->responseBody, input->bytes, input->size);
+   if (input) bytearray_append_all(ctx->responseBody, input->bytes, input->size);
    http_response_headers(ctx, 200, false, "text/plain");
    http_send(ctx);
    return true;
@@ -128,7 +128,7 @@ List getEnvOpts() {
    wchar_t wideOpts[1024];
    char dest[256];
    wchar_t **parsed;
-   List utf8Env = list_new(16, sizeof(char*), list_setFnCStrings);
+   List utf8Env = list_new();
    int count = 0;
    char *miscOpts = getenv("MISC_DOC_OPTS");
    if (miscOpts) {
@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
       srcRoot = hPath(exeLoc, "srcroot");
       map_putall(opt, "port", "7575", "ext", "", "out", hPath(exeLoc, "data"), "localhost", "localhost", "debug", "0", NULL);
       List envOpts = getEnvOpts();
-      if (envOpts) map_parseCLI(opt, envOpts->elements, envOpts->size);
+      if (envOpts) map_parseCLI(opt, (char **)envOpts->data, envOpts->size);
       map_parseCLI(opt, argv, argc);
       port = toInt(map_get(opt, "port"));
       dataRoot = map_get(opt, "out");
@@ -167,7 +167,7 @@ int main(int argc, char **argv) {
 
       log_init(false, debugMode == M_TRACE ? LOG_TRACE : LOG_DEBUG, hPath(exeLoc, "log.txt"));
       for (int i = 0; i < envOpts->size; i++) {
-         log_debug("env opt [%s]", list_get(envOpts, i));
+         log_debug("env opt [%s]", envOpts->data[i]);
       }
 
       if (debugMode == 3) {

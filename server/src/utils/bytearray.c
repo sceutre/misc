@@ -4,13 +4,16 @@
 #include "bytearray.h"
 #include "utils.h"
 
-Bytearray bytearray_new(int initialSize) {
+Bytearray bytearray_new() {
+   return bytearray_new_ex(16, GROW_MODE_HALFAGAIN);
+}
+
+Bytearray bytearray_new_ex(int initialSize, char growMode) {
    Bytearray s = malloc(sizeof(*s));
-   initialSize = initialSize ? initialSize : 16;
-   s->bytes = malloc(initialSize);
+   s->growMode = growMode;
+   s->bytes = (initialSize > 0) ? malloc(initialSize) : NULL;
    s->capacity = initialSize;
    s->size = 0;
-   s->growMode = GROW_MODE_HALFAGAIN;
    return s;
 }
 

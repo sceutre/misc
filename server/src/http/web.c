@@ -21,17 +21,18 @@ static void listenLoop();
 static void workerLoop();
 static void overloaded(CommsSocket socket);
 
-static void setFn(List list, void *element, int i) {
-   WebHandler h = element;
-   ((WebHandler)list->elements)[i] = *h;
-}
 
 void web_handler(char *name, char *methodPattern, char *urlPattern, WebCallback callback, void *arg) {
    if (this.handlers == NULL) {
-      this.handlers = list_new(4, sizeof(struct WebHandlerStruct), setFn);
+      this.handlers = list_new();
    }
-   struct WebHandlerStruct h = {.name = name, .arg = arg, .methodPattern = methodPattern, .urlPattern = urlPattern, .callback = callback};
-   list_push(this.handlers, &h);
+   WebHandler h = calloc(1, sizeof *h);
+   h->name = name;
+   h->arg = arg;
+   h->methodPattern = methodPattern;
+   h->urlPattern = urlPattern;
+   h->callback = callback;
+   list_push(this.handlers, h);
 }
 
 void web_setMaxConcurrent(int maxConcurrent) {
@@ -78,7 +79,7 @@ static void httpCallback(HttpContext ctx, bool isDone) {
    char *path = get_req(ctx, H_PATH);
    log_debug("request: %s %s", method, path);
    for (int i = 0; i < this.handlers->size; i++) {
-      WebHandler h = list_get(this.handlers, i);
+      WebHandler h = this.handlers->data[i];
       char *m = h->methodPattern;
       char *u = h->urlPattern;
       if ((strcmp("*", m) == 0 || containsIgnoreCase(m, method)) && strncmp(path, u, strlen(u)) == 0) {

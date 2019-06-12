@@ -4,6 +4,8 @@
 #include "../utils/concurrency.h"
 #include "../utils/map.h"
 #include "../utils/log.h"
+#include "../utils/list.h"
+#include "../utils/bytearray.h"
 #include "tests.h"
 
 static void testExceptionsB() {
@@ -45,7 +47,31 @@ static void testMap() {
    map_free(map);
 }
 
+static void testList() {
+   List list = list_new();
+   list->freeFn = list_freeDirectFn;
+   for (int i = 0; i < 100; i++) {
+      list_push(list, (i%2 == 0 ? "some string" : "odd"));
+   }
+   log_info("%d: %s", 50, list->data[50]);
+   log_info("%d: %s", 51, list->data[51]);
+   log_info("%d: %s", 52, list->data[52]);
+   list_free(list);
+}
+
+static void testBytearray() {
+   Bytearray array = bytearray_new();
+   for (int i = 0; i < 26; i++) {
+      bytearray_append(array, 'A' + i);
+   }
+   bytearray_append(array, 0);
+   log_info("%s", array->bytes);
+   bytearray_free(array);
+}
+
 void testAll() {
    testExceptions();
    testMap();
+   testList();
+   testBytearray();
 }

@@ -1,6 +1,7 @@
 #include "utils/os-windows.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include "win.h"
 #include "utils/list.h"
 
@@ -15,17 +16,14 @@ static HWND hWnd;
 static List items = NULL;
 static char *icoFile;
 
-static void setFn(List list, void *element, int i) {
-   MenuItem *mi = element;
-   ((MenuItem *)list->elements)[i] = *mi;
-}
-
 void win_pushMenuItem(char *name, MenuFn callback) {
    if (items == NULL) {
-      items = list_new(10, sizeof(MenuItem), setFn);
+      items = list_new();
    }
-   MenuItem mi = { name, callback };
-   list_push(items, &mi);
+   MenuItem *mi = malloc(sizeof *mi);
+   mi->menuText=name;
+   mi->callback=callback;
+   list_push(items, mi);
 }
 
 static void showContextMenu(HWND hWnd) {
@@ -34,7 +32,7 @@ static void showContextMenu(HWND hWnd) {
    HMENU hMenu = CreatePopupMenu();
    if (hMenu) {
       for (int i = 1; i < items->size; i++) {
-         MenuItem *p = list_get(items, i);
+         MenuItem *p = items->data[i];
          InsertMenu(hMenu, -1, MF_BYPOSITION, MENU_START + i, p->menuText);
       }
       SetForegroundWindow(hWnd);
@@ -54,14 +52,14 @@ static LRESULT CALLBACK appWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                showContextMenu(hWnd);
                break;
             case WM_LBUTTONDBLCLK:
-               ((MenuItem *)items->elements)->callback();
+               ((MenuItem *)(items->data[0]))->callback();
                break;
          }
          break;
       case WM_COMMAND:
          ix = LOWORD(wParam);
          ix -= MENU_START;
-         ((MenuItem *)items)[ix].callback();
+         ((MenuItem *)(items->data[ix]))->callback();
          return 1;
       case WM_DESTROY:
          notifyIconData.uFlags = 0;
