@@ -6,6 +6,7 @@
 #include "../utils/concurrency.h"
 #include "../utils/list.h"
 #include "../utils/log.h"
+#include "../utils/utils.h"
 
 static struct {
    int port;
@@ -92,7 +93,7 @@ static void httpCallback(HttpContext ctx, bool isDone) {
 
 static void workerLoop() {
    CommsSocket socket;
-   struct HttpContextStruct context = { 0, map_new(), map_new(), bytearray_new(0), bytearray_new(0), NULL, httpCallback, false };
+   struct HttpContextStruct context = { 0, map_new(), map_new(), bytearray_new_ex(0), bytearray_new_ex(0), NULL, httpCallback, false };
 
    while (true) {
       mutex_lockRW(this.mutex);

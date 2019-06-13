@@ -20,12 +20,13 @@
  * IN THE SOFTWARE.
  */
 
-#include "os-windows.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdarg.h>
 #include "log.h"
 #include "concurrency.h"
 #include "utils.h"
+#include "win.h"
 
 typedef struct {
    FILE *fp;
@@ -68,8 +69,8 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
 
    mutex_lockRW(L.mutex);
 
-   SYSTEMTIME lt;
-   GetLocalTime(&lt);
+   int wHour, wMinute, wSecond, wMillis;
+   win_getLocalTime(&wHour, &wMinute, &wSecond, &wMillis);
    va_list args;
    char lineinfo[100] = {0}, shortFile[10], *lineInfoP = lineinfo;
    if (level == LOG_TRACE) {
@@ -79,8 +80,7 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
    }
    if (L.fp != NULL) {
       va_start(args, fmt);
-      fprintf(L.fp, "%s[%d] %02d:%02d:%02d.%03d %-5s ", lineInfoP, t_threadId(), lt.wHour, lt.wMinute, lt.wSecond, lt.wMilliseconds,
-              level_names[level]);
+      fprintf(L.fp, "%s[%d] %02d:%02d:%02d.%03d %-5s ", lineInfoP, t_threadId(), wHour, wMinute, wSecond, wMillis, level_names[level]);
       vfprintf(L.fp, fmt, args);
       va_end(args);
       fprintf(L.fp, "\n");

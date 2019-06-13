@@ -5,14 +5,13 @@
 
 
 List list_new() {
-   return list_new_ex(16, GROW_MODE_HALFAGAIN, list_freeNoOpFn);
+   return list_new_ex(16, list_freeNoOpFn);
 }
 
-List list_new_ex(int initialSize, char growMode, ElementFn freeFn) {
+List list_new_ex(int initialSize, ElementFn freeFn) {
    List list = malloc(sizeof *list);
    list->capacity = 0;
    list->size = 0;
-   list->growMode = GROW_MODE_HALFAGAIN;
    list->freeFn = freeFn;
    list_grow(list, initialSize);
    return list;

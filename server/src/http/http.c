@@ -6,6 +6,7 @@
 #include "../utils/concurrency.h"
 #include "../utils/log.h"
 #include "../utils/map.h"
+#include "../utils/utils.h"
 
 static bool printHeader(char *key, void *val, void *ctx);
 static bool sendHeader(char *key, void *val, void *ctx);

@@ -3,7 +3,6 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
-#include "utils.h"
 
 typedef bool (*ElementFn)(void *element);
 
@@ -12,11 +11,10 @@ typedef struct ListStruct {
    int capacity;
    void **data;
    ElementFn freeFn;
-   char growMode;
 } *List;
 
 List list_new();
-List list_new_ex(int initialSize, char growMode, ElementFn freeFn);
+List list_new_ex(int initialSize, ElementFn freeFn);
 void list_push(List list, void *element);
 void *list_pop(List list);
 int list_find(List list, ElementFn testFn);
@@ -30,7 +28,9 @@ static inline void list_grow(List list, int needed) {
       list->data = malloc(needed * sizeof(void*));
       list->capacity = needed;
    } else if (list->capacity < needed) {
-      int newSize = growSize(list->capacity, needed, list->growMode);
+      int half = list->capacity >> 1;
+      int newSize = list->capacity + ((half < 32768) ? half : 32768);
+      if (needed > newSize) newSize = needed;
       list->data = realloc(list->data, newSize * sizeof(void*));
       list->capacity = newSize;
    }

@@ -5,12 +5,11 @@
 #include "utils.h"
 
 Bytearray bytearray_new() {
-   return bytearray_new_ex(16, GROW_MODE_HALFAGAIN);
+   return bytearray_new_ex(16);
 }
 
-Bytearray bytearray_new_ex(int initialSize, char growMode) {
+Bytearray bytearray_new_ex(int initialSize) {
    Bytearray s = malloc(sizeof(*s));
-   s->growMode = growMode;
    s->bytes = (initialSize > 0) ? malloc(initialSize) : NULL;
    s->capacity = initialSize;
    s->size = 0;
@@ -31,6 +30,7 @@ void bytearray_append_all(Bytearray s, const unsigned char *c, int n) {
    bytearray_grow(s, s->size + n);
    unsigned char *b = s->bytes + s->size;
    for (int i = 0; i < n; i++) b[i] = c[i];
+   s->size += n;
 }
 
 Bytearray bytearray_readfile(char *filename) {
@@ -38,11 +38,11 @@ Bytearray bytearray_readfile(char *filename) {
    if (fp != NULL) {
       fseek(fp, 0L, SEEK_END);
       long fileSize = ftell(fp);
-      Bytearray str = bytearray_new(fileSize + 1);
+      Bytearray str = bytearray_new_ex(fileSize + 1);
       fseek(fp, 0L, SEEK_SET);
       fread(str->bytes, 1, fileSize, fp);
       str->bytes[fileSize] = 0;
-      str->size = fileSize + 1;
+      str->size = fileSize; // leave space for 0 but it's not actually part of the file
       fclose(fp);
       return str;
    }

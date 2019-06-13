@@ -1,17 +1,19 @@
-#include "utils/os-windows.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "utils/utils.h"
 #include "utils/list.h"
 #include "utils/log.h"
 #include "utils/bytearray.h"
 #include "utils/concurrency.h"
+#include "utils/win.h"
 #include "http/web.h"
 #include "http/files.h"
 #include "tests/tests.h"
 #include "markdown/render_html.h"
-#include "win.h"
 #include "http/mime.h"
+
+#define TOOLTIP "Misc documentation server - built " __DATE__ 
 
 #define PARSER_FLAGS (MD_FLAG_STRIKETHROUGH | MD_FLAG_TABLES | MD_FLAG_NOINDENTEDCODEBLOCKS | MD_FLAG_TASKLISTS)
 #define RENDER_FLAGS 0
@@ -92,17 +94,7 @@ static void usage() {
 }
 
 static void showHome() {
-   ShellExecute(NULL, NULL, t_printf("http://%s:%d/", localhost, port), NULL, NULL, SW_SHOW);
-}
-
-static char *getExeFolder() {
-   char *last = NULL;
-   char *buf = malloc(256 * sizeof(char));
-   GetModuleFileName(NULL, buf, 256);
-   for (char *p = buf; *p; p++)
-      if (*p == '/' || *p == '\\') last = p;
-   if (last) *last = 0;
-   return buf;
+   win_openBrowser(localhost, port, "", false);
 }
 
 static void addExternalFolders(char *external) {
@@ -124,26 +116,6 @@ static void addExternalFolders(char *external) {
    }
 }
 
-List getEnvOpts() {
-   wchar_t wideOpts[1024];
-   char dest[256];
-   wchar_t **parsed;
-   List utf8Env = list_new();
-   int count = 0;
-   char *miscOpts = getenv("MISC_DOC_OPTS");
-   if (miscOpts) {
-      swprintf(wideOpts, 1024, L"%hs", miscOpts);
-      parsed = CommandLineToArgvW(wideOpts, &count);
-      list_push(utf8Env, "misc.exe");
-      for (int i = 0; i < count; i++) {
-         WideCharToMultiByte(CP_UTF8, 0, parsed[i], -1, dest, sizeof(dest), NULL, NULL);
-         list_push(utf8Env, strdup(dest));
-      }
-      return utf8Env;
-   }
-   return NULL;
-}
-
 int main(int argc, char **argv) {
    win_pushMenuItem("Open", showHome);
    win_pushMenuItem("Open", showHome);
@@ -153,11 +125,13 @@ int main(int argc, char **argv) {
 
    try {
       Map opt = map_new();
-      char *exeLoc = getExeFolder();
+      char *exeLoc = win_getExeFolder();
       srcRoot = hPath(exeLoc, "srcroot");
       map_putall(opt, "port", "7575", "ext", "", "out", hPath(exeLoc, "data"), "localhost", "localhost", "debug", "0", NULL);
-      List envOpts = getEnvOpts();
-      if (envOpts) map_parseCLI(opt, (char **)envOpts->data, envOpts->size);
+      List envOpts = win_getEnvOpts("MISC_DOC_OPTS");
+      if (envOpts) {
+         map_parseCLI(opt, (char **)envOpts->data, envOpts->size);
+      }
       map_parseCLI(opt, argv, argc);
       port = toInt(map_get(opt, "port"));
       dataRoot = map_get(opt, "out");
@@ -186,7 +160,7 @@ int main(int argc, char **argv) {
          files_addFile("index", "GET", "/", hPath(srcRoot, debugMode != M_PROD ? "index-dev.html" : "index.html"), 200, true);
          files_addFile("404-method", "*", "/", hPath(srcRoot, "404.html"), 404, false);
          web_start(port);
-         win_run(hPath(srcRoot, "prod\\favicon.ico"));
+         win_run(hPath(srcRoot, "prod\\favicon.ico"), TOOLTIP);
          log_info("shutting down");
       }
    } catch {

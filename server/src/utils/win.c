@@ -1,15 +1,14 @@
-#include "utils/os-windows.h"
+#include "os-windows.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include "win.h"
-#include "utils/list.h"
+#include "list.h"
+#include "concurrency.h"
 
 #define ICON_ID 1
 #define TRAY_MESSAGE (WM_APP + 1)
 #define MENU_START (WM_APP + 2)
-
-#define TOOLTIP "Misc documentation server - 1.0.410"
 
 static NOTIFYICONDATA notifyIconData;
 static HWND hWnd;
@@ -70,7 +69,7 @@ static LRESULT CALLBACK appWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
    return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-static bool init() {
+static bool init(char *tooltip) {
    static char szClassName[] = "myWindowClass";
    static char szWindowName[] = "myWindowTitle";
    WNDCLASSEX WndClass;
@@ -100,7 +99,7 @@ static bool init() {
    notifyIconData.hWnd = hWnd;
    notifyIconData.uCallbackMessage = TRAY_MESSAGE;
    notifyIconData.hIcon = (HICON)LoadImage(NULL, icoFile, IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR | LR_LOADFROMFILE);
-   lstrcpyn(notifyIconData.szTip, TOOLTIP, sizeof(notifyIconData.szTip) / sizeof(WCHAR));
+   lstrcpyn(notifyIconData.szTip, tooltip, sizeof(notifyIconData.szTip) / sizeof(WCHAR));
 
    Shell_NotifyIcon(NIM_ADD, &notifyIconData);
    if (notifyIconData.hIcon && DestroyIcon(notifyIconData.hIcon)) notifyIconData.hIcon = NULL;
@@ -111,12 +110,55 @@ void win_exit() {
    DestroyWindow(hWnd);
 }
 
-void win_run(char *ico) {
+void win_run(char *ico, char *tooltip) {
    MSG msg;
    icoFile = ico;
-   if (!init()) return;
+   if (!init(tooltip)) return;
    while (GetMessage(&msg, NULL, 0, 0)) {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
    }
+}
+
+void win_openBrowser(char *host, int port, char *uri, bool https) {
+   ShellExecute(NULL, NULL, t_printf("http%s://%s:%d/%s", https ? "s" : "", host, port, uri), NULL, NULL, SW_SHOW);
+}
+
+char *win_getExeFolder() {
+   char *last = NULL;
+   char *buf = malloc(256 * sizeof(char));
+   GetModuleFileName(NULL, buf, 256);
+   for (char *p = buf; *p; p++)
+      if (*p == '/' || *p == '\\') last = p;
+   if (last) *last = 0;
+   return buf;
+}
+
+List win_getEnvOpts(char *envStr) {
+   wchar_t wideOpts[1024];
+   char dest[256];
+   wchar_t **parsed;
+   int count = 0;
+   char *miscOpts = getenv(envStr);
+   if (miscOpts) {
+      List list = list_new();
+      list_push(list, "");
+      swprintf(wideOpts, 1024, L"%hs", miscOpts);
+      parsed = CommandLineToArgvW(wideOpts, &count);
+      for (int i = 0; i < count; i++) {
+         WideCharToMultiByte(CP_UTF8, 0, parsed[i], -1, dest, sizeof(dest), NULL, NULL);
+         list_push(list, strdup(dest));
+      }
+      return list;
+   }
+   return NULL;
+}
+
+void win_getLocalTime(int *hours, int *mins, int *seconds, int *millis) {
+   SYSTEMTIME lt;
+   GetLocalTime(&lt);
+   *hours = lt.wHour;
+   *mins = lt.wMinute;
+   *seconds = lt.wSecond;
+   *millis = lt.wMilliseconds;
 }

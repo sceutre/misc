@@ -3,6 +3,7 @@
 #include "web.h"
 #include "files.h"
 #include "mime.h"
+#include "../utils/utils.h"
 #include "../utils/bytearray.h"
 #include "../utils/concurrency.h"
 #include "../utils/log.h"

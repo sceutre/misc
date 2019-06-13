@@ -2,17 +2,15 @@
 #define STRING_H
 
 #include <stdlib.h>
-#include "utils.h"
 
 typedef struct BytearrayStruct {
    int size;
    int capacity;
    unsigned char *bytes;
-   char growMode;
 } *Bytearray;
 
 Bytearray bytearray_new();
-Bytearray bytearray_new_ex(int initialSize, char growMode);
+Bytearray bytearray_new_ex(int initialSize);
 Bytearray bytearray_readfile(char *filename);
 void bytearray_append(Bytearray bytes, const char c);
 void bytearray_append_all(Bytearray bytes, const unsigned char *str, int n);
@@ -26,9 +24,13 @@ static inline void bytearray_grow(Bytearray bytes, int needed) {
       bytes->bytes = malloc(needed);
       bytes->capacity = needed;
    } else if (bytes->capacity < needed) {
-      int newSize = growSize(bytes->capacity, needed, bytes->growMode);
+      int half = bytes->capacity >> 1;
+      int newSize = bytes->capacity + ((half < 32768) ? half : 32768);
+      if (needed > newSize) newSize = needed;
       bytes->bytes = realloc(bytes->bytes, newSize);
       bytes->capacity = newSize;
    }
 }
+
+
 #endif
