@@ -5,6 +5,7 @@
 #include "win.h"
 #include "list.h"
 #include "concurrency.h"
+#include "utils.h"
 
 #define ICON_ID 1
 #define TRAY_MESSAGE (WM_APP + 1)
@@ -134,24 +135,24 @@ char *win_getExeFolder() {
    return buf;
 }
 
-List win_getEnvOpts(char *envStr) {
+int win_getEnvOpts(char *envStr, char **dest, int size) {
    wchar_t wideOpts[1024];
-   char dest[256];
+   char tmp[256];
    wchar_t **parsed;
    int count = 0;
    char *miscOpts = getenv(envStr);
    if (miscOpts) {
-      List list = list_new();
-      list_push(list, "");
+      dest[0] = "";
       swprintf(wideOpts, 1024, L"%hs", miscOpts);
       parsed = CommandLineToArgvW(wideOpts, &count);
+      count = min(count, size-1);
       for (int i = 0; i < count; i++) {
-         WideCharToMultiByte(CP_UTF8, 0, parsed[i], -1, dest, sizeof(dest), NULL, NULL);
-         list_push(list, strdup(dest));
+         WideCharToMultiByte(CP_UTF8, 0, parsed[i], -1, tmp, sizeof(tmp), NULL, NULL);
+         dest[i + 1] = strdup(tmp);
       }
-      return list;
+      return count + 1;
    }
-   return NULL;
+   return 0;
 }
 
 void win_getLocalTime(int *hours, int *mins, int *seconds, int *millis) {

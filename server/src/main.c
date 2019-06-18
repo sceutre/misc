@@ -128,10 +128,9 @@ int main(int argc, char **argv) {
       char *exeLoc = win_getExeFolder();
       srcRoot = hPath(exeLoc, "srcroot");
       map_putall(opt, "port", "7575", "ext", "", "out", hPath(exeLoc, "data"), "localhost", "localhost", "debug", "0", NULL);
-      List envOpts = win_getEnvOpts("MISC_DOC_OPTS");
-      if (envOpts) {
-         map_parseCLI(opt, (char **)envOpts->data, envOpts->size);
-      }
+      char *envArgv[100];
+      int envArgc = win_getEnvOpts("MISC_DOC_OPTS", envArgv, 100);
+      if (envArgc > 0) map_parseCLI(opt, envArgv, envArgc);
       map_parseCLI(opt, argv, argc);
       port = toInt(map_get(opt, "port"));
       dataRoot = map_get(opt, "out");
@@ -140,8 +139,8 @@ int main(int argc, char **argv) {
       char *externalFolders = map_get(opt, "ext");
 
       log_init(false, debugMode == M_TRACE ? LOG_TRACE : LOG_DEBUG, hPath(exeLoc, "log.txt"));
-      for (int i = 0; i < envOpts->size; i++) {
-         log_debug("env opt [%s]", envOpts->data[i]);
+      for (int i = 0; i < envArgc; i++) {
+         log_debug("env opt [%s]", envArgv[i]);
       }
 
       if (debugMode == 3) {
