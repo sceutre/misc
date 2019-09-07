@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-typedef struct BytearrayStruct {
+typedef struct Bytearray_s {
    int size;
    int capacity;
    unsigned char *bytes;
@@ -31,6 +31,5 @@ static inline void bytearray_grow(Bytearray bytes, int needed) {
       bytes->capacity = newSize;
    }
 }
-
 
 #endif

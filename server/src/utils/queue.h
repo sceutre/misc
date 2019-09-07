@@ -3,13 +3,8 @@
 
 #include <stdbool.h>
 
-typedef struct QueueStruct {
-   int maxItems;
-   int count;
-   void **items;
-   int head;
-   int tail;
-} *Queue;
+struct Queue_s;
+typedef struct Queue_s *Queue;
 
 Queue queue_new(int maxNumItems);
 bool queue_prepend(Queue queue, void *item);

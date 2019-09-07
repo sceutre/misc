@@ -7,18 +7,20 @@
 #define THROW_QUIETLY 0
 #endif 
 
-#ifndef CONCURRENCY_IMPL
-typedef void *Mutex;
-typedef void *Signal;
-typedef void *Thread;
-#endif
+struct Mutex_s;
+struct Signal_s;
+struct Thread_s;
+typedef struct Mutex_s *Mutex;
+typedef struct Signal_s *Signal;
+typedef struct Thread_s *Thread;
 
-typedef struct LocalStorageStruct {
+struct LocalStorage_s {
    char *buffer;
    int ix;
    char *error;
    Thread thread;
-} *LocalStorage;
+};
+typedef struct LocalStorage_s *LocalStorage;
 
 typedef void (*CallbackFn)();
 

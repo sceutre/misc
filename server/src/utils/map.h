@@ -1,17 +1,8 @@
 #ifndef __MAP_H__
 #define __MAP_H__
 
-typedef struct MapElementStruct {
-   char *key;
-   unsigned long hash;
-   void *data;
-} *MapElement;
-
-typedef struct MapStruct {
-   int capacity;
-   int size;
-   MapElement data;
-} *Map;
+struct Map_s;
+typedef struct Map_s *Map;
 
 typedef bool (*MapCallbackFn)(char *key, void *value, void *arg);
 

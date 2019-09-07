@@ -4,26 +4,23 @@
 #include <stdbool.h>
 #include "concurrency.h"
 #include "log.h"
+#include "sockets.h"
 
-#define SOCKETS_IMPL
 #define SOCKET_READ_BUFFER_SZ 8192
+#define POOL_SIZE 10
 
-typedef struct {
+struct ListenSocket_s {
    SOCKET socket;
    int port;
-} *ListenSocket;
+};
 
-typedef struct {
+struct CommsSocket_s {
    SOCKET socket;
    char buf[SOCKET_READ_BUFFER_SZ];
    int ix;
    int length;
    bool eof;
-} *CommsSocket;
-
-#include "sockets.h"
-
-#define POOL_SIZE 10
+};
 
 static CommsSocket getCommsSocket();
 

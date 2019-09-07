@@ -4,12 +4,12 @@
 #define READ_EOF -1
 #define READ_ERROR -2
 
-#ifndef SOCKETS_IMPL
-typedef void *ListenSocket;
-typedef void *CommsSocket;
-#endif
-
 #include <stdbool.h>
+
+struct ListenSocket_s;
+struct CommsSocket_s;
+typedef struct ListenSocket_s *ListenSocket;
+typedef struct CommsSocket_s *CommsSocket;
 
 ListenSocket socket_new(int port);
 CommsSocket socket_listen(ListenSocket socket);

@@ -4,6 +4,14 @@
 #include <string.h>
 #include "queue.h"
 
+struct Queue_s {
+   int maxItems;
+   int count;
+   void **items;
+   int head;
+   int tail;
+};
+
 Queue queue_new(int maxNumItems) {
    Queue q = malloc(sizeof(*q));
    q->head = q->tail = q->count = 0;

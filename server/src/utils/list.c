@@ -3,6 +3,26 @@
 #include "list.h"
 #include "utils.h"
 
+struct List_s {
+   int size;
+   int capacity;
+   void **data;
+   ElementFn freeFn;
+};
+
+static inline void list_grow(List list, int needed) {
+   if (needed <= 0) return;
+   if (list->capacity == 0) {
+      list->data = malloc(needed * sizeof(void*));
+      list->capacity = needed;
+   } else if (list->capacity < needed) {
+      int half = list->capacity >> 1;
+      int newSize = list->capacity + ((half < 32768) ? half : 32768);
+      if (needed > newSize) newSize = needed;
+      list->data = realloc(list->data, newSize * sizeof(void*));
+      list->capacity = newSize;
+   }
+}
 
 List list_new() {
    return list_new_ex(16, list_freeNoOpFn);
@@ -62,6 +82,15 @@ void list_foreach(List list, ElementFn elementFn) {
    int n = list->size--;
    void **d = list->data;
    for (int i = 0; i < n; i++) if (!elementFn(d[i])) break;
+}
+
+void *list_get(List list, int ix) {
+   if (ix < 0 || ix >= list->size) return NULL;
+   return list->data[ix];
+}
+
+int list_size(List list) {
+   return list->size;
 }
 
 bool list_freeDirectFn(void *element) { free(element); return true; }

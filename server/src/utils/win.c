@@ -11,6 +11,11 @@
 #define TRAY_MESSAGE (WM_APP + 1)
 #define MENU_START (WM_APP + 2)
 
+typedef struct {
+   char *menuText;
+   MenuFn callback;
+} MenuItem;
+
 static NOTIFYICONDATA notifyIconData;
 static HWND hWnd;
 static List items = NULL;
@@ -31,8 +36,8 @@ static void showContextMenu(HWND hWnd) {
    GetCursorPos(&pt);
    HMENU hMenu = CreatePopupMenu();
    if (hMenu) {
-      for (int i = 1; i < items->size; i++) {
-         MenuItem *p = items->data[i];
+      for (int i = 1, n = list_size(items); i < n; i++) {
+         MenuItem *p = list_get(items, i);
          InsertMenu(hMenu, -1, MF_BYPOSITION, MENU_START + i, p->menuText);
       }
       SetForegroundWindow(hWnd);
@@ -52,14 +57,14 @@ static LRESULT CALLBACK appWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                showContextMenu(hWnd);
                break;
             case WM_LBUTTONDBLCLK:
-               ((MenuItem *)(items->data[0]))->callback();
+               ((MenuItem *)list_get(items, 0))->callback();
                break;
          }
          break;
       case WM_COMMAND:
          ix = LOWORD(wParam);
          ix -= MENU_START;
-         ((MenuItem *)(items->data[ix]))->callback();
+         ((MenuItem *)list_get(items, ix))->callback();
          return 1;
       case WM_DESTROY:
          notifyIconData.uFlags = 0;

@@ -79,8 +79,8 @@ static void httpCallback(HttpContext ctx, bool isDone) {
    char *method = get_req(ctx, H_METHOD);
    char *path = get_req(ctx, H_PATH);
    log_debug("request: %s %s", method, path);
-   for (int i = 0; i < this.handlers->size; i++) {
-      WebHandler h = this.handlers->data[i];
+   for (int i = 0, n = list_size(this.handlers); i < n; i++) {
+      WebHandler h = list_get(this.handlers, i);
       char *m = h->methodPattern;
       char *u = h->urlPattern;
       if ((strcmp("*", m) == 0 || containsIgnoreCase(m, method)) && strncmp(path, u, strlen(u)) == 0) {

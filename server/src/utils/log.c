@@ -31,7 +31,7 @@
 typedef struct {
    FILE *fp;
    int level;
-   Mutex *mutex;
+   Mutex mutex;
 } LogOpts;
 
 static LogOpts L = {NULL, LOG_DEBUG, NULL};

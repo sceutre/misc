@@ -5,6 +5,19 @@
 #include "map.h"
 #include "utils.h"
 
+struct MapElement_s {
+   char *key;
+   unsigned long hash;
+   void *data;
+};
+typedef struct MapElement_s *MapElement;
+
+struct Map_s {
+   int capacity;
+   int size;
+   MapElement data;
+};
+
 #define INITIAL_SIZE 64
 #define issame(e,k,h) (e.hash == h && strcmp(k,e.key) == 0)
 #define isempty(e) (e.key == NULL)
@@ -18,7 +31,7 @@ Map map_new() {
 }
 
 void map_init(Map m) {
-   m->data = calloc(INITIAL_SIZE, sizeof(struct MapElementStruct));
+   m->data = calloc(INITIAL_SIZE, sizeof(struct MapElement_s));
    m->capacity = INITIAL_SIZE;
    m->size = 0;
 }

@@ -98,7 +98,7 @@
 }
 
 .main-edit {
-   height: calc(100% - 70px);
+   height: calc(100% - 80px);
 }
 
 .main-edit textarea {
@@ -118,3 +118,16 @@
 .main-edit textarea:focus {
    border: 1px solid var(--main-pre-border);
 }
+
+::-webkit-scrollbar { width: 12px; height: 12px; }
+.main::-webkit-scrollbar-track { background: var(--main-scrollbar-thumb);  }
+.main::-webkit-scrollbar-thumb { background: var(--main-scrollbar-track); }
+.main { scrollbar-color: var(--main-scrollbar-thumb) var(--main-scrollbar-track); }
+
+.sidebar::-webkit-scrollbar-track { background: var(--sidebar-scrollbar-thumb);  }
+.sidebar::-webkit-scrollbar-thumb { background: var(--sidebar-scrollbar-track); }
+.sidebar { scrollbar-color: var(--sidebar-scrollbar-thumb) var(--sidebar-scrollbar-track); }
+
+.main-edit textarea::-webkit-scrollbar-track { background: var(--main-pre-scrollbar-thumb);  }
+.main-edit textarea::-webkit-scrollbar-thumb { background: var(--main-pre-scrollbar-track); }
+.main-edit textarea { scrollbar-color: var(--main-pre-scrollbar-thumb) var(--main-pre-scrollbar-track); }

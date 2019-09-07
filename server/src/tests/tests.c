@@ -48,14 +48,13 @@ static void testMap() {
 }
 
 static void testList() {
-   List list = list_new();
-   list->freeFn = list_freeDirectFn;
+   List list = list_new_ex(16, list_freeDirectFn);
    for (int i = 0; i < 100; i++) {
       list_push(list, (i%2 == 0 ? "some string" : "odd"));
    }
-   log_info("%d: %s", 50, list->data[50]);
-   log_info("%d: %s", 51, list->data[51]);
-   log_info("%d: %s", 52, list->data[52]);
+   log_info("%d: %s", 50, list_get(list, 50));
+   log_info("%d: %s", 51, list_get(list, 51));
+   log_info("%d: %s", 52, list_get(list, 52));
    list_free(list);
 }
 

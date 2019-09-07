@@ -4,34 +4,31 @@
 #include <stdbool.h>
 #include "log.h"
 #include "list.h"
+#include "concurrency.h"
 
-#define CONCURRENCY_IMPL
-
-typedef struct {
+struct Mutex_s {
    SRWLOCK srwLock;
-} *Mutex;
+};
 
-typedef struct {
+struct Signal_s {
    HANDLE semaphore;
-} *Signal;
+};
 
-typedef struct {
+struct Thread_s {
    HANDLE handle;
    unsigned int osId;
    int id;
-} *Thread;
+};
 
-#include "concurrency.h"
-
-struct PerThread {
-   struct LocalStorageStruct storage;
+struct PerThread_s {
+   struct LocalStorage_s storage;
    List jumpBuffers;
 };
 
 #define THREAD_BUFFER_SIZE 20 * 1024
 #define MAX_THREADS 50
 
-struct PerThread locals[MAX_THREADS];
+struct PerThread_s locals[MAX_THREADS];
 Mutex threadStartMutex = NULL;
 
 static int indexOfLocal(unsigned int id);
@@ -167,7 +164,7 @@ jmp_buf *_threadLocalJumpBuf(bool push, bool pop) {
       p = list_pop(list);
       free(p);
    }
-   return list->size == 0 ? NULL : list->data[list->size - 1];
+   return list_get(list, list_size(list) - 1);
 }
 
 int t_threadId() {
