@@ -53,7 +53,7 @@ ListenSocket socket_new(int port) {
    }
    struct sockaddr_in server;
    server.sin_family = AF_INET;
-   server.sin_addr.s_addr = INADDR_ANY;
+   server.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
    server.sin_port = htons(port);
    if (bind(s, (struct sockaddr *)&server, sizeof(server)) == SOCKET_ERROR) {
       log_fatal("Bind failed with error code : %d", WSAGetLastError());

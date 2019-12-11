@@ -35,7 +35,7 @@ $(OBJ_FILES): $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c $(BUILD_DIR)/%.d
 	@printf "  \xE2\x9c\x93 $@\n"
 
 $(EXE): $(OBJ_FILES)
-	@$(CC) -o $@ $^ -lws2_32 -mwindows
+	@$(CC) -o $@ $^ -lws2_32 -ladvapi32 -mwindows
 	@printf "  \xE2\x9c\x93 $(EXE)\n"
 
 dirs:

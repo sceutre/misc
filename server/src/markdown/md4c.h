@@ -129,7 +129,18 @@ typedef enum MD_SPANTYPE {
     /* <del>...</del>
      * Note: Recognized only when MD_FLAG_STRIKETHROUGH is enabled.
      */
-    MD_SPAN_DEL
+    MD_SPAN_DEL,
+
+    /* For recognizing inline ($) and display ($$) equations
+     * Note: Recognized only when MD_FLAG_LATEXMATHSPANS is enabled.
+     */
+    MD_SPAN_LATEXMATH,
+    MD_SPAN_LATEXMATH_DISPLAY,
+
+    /* Wiki links
+     * Note: Recognized only when MD_FLAG_WIKILINKS is enabled.
+     */
+    MD_SPAN_WIKILINK
 } MD_SPANTYPE;
 
 /* Text is the actual textual contents of span. */
@@ -168,7 +179,11 @@ typedef enum MD_TEXTTYPE {
     /* Text is a raw HTML. If it is contents of a raw HTML block (i.e. not
      * an inline raw HTML), then MD_TEXT_BR and MD_TEXT_SOFTBR are not used.
      * The text contains verbatim '\n' for the new lines. */
-    MD_TEXT_HTML
+    MD_TEXT_HTML,
+
+    /* Text is inside an equation. This is processed the same way as inlined code
+     * spans (`code`). */
+    MD_TEXT_LATEXMATH
 } MD_TEXTTYPE;
 
 
@@ -238,6 +253,7 @@ typedef struct MD_BLOCK_H_DETAIL {
 typedef struct MD_BLOCK_CODE_DETAIL {
     MD_ATTRIBUTE info;
     MD_ATTRIBUTE lang;
+    MD_CHAR fence_char;     /* The character used for fenced code block; or zero for indented code block. */
 } MD_BLOCK_CODE_DETAIL;
 
 /* Detailed info for MD_BLOCK_TH and MD_BLOCK_TD. */
@@ -257,6 +273,10 @@ typedef struct MD_SPAN_IMG_DETAIL {
     MD_ATTRIBUTE title;
 } MD_SPAN_IMG_DETAIL;
 
+/* Detailed info for MD_SPAN_WIKILINK. */
+typedef struct MD_SPAN_WIKILINK {
+    MD_ATTRIBUTE target;
+} MD_SPAN_WIKILINK_DETAIL;
 
 /* Flags specifying extensions/deviations from CommonMark specification.
  *
@@ -274,6 +294,8 @@ typedef struct MD_SPAN_IMG_DETAIL {
 #define MD_FLAG_STRIKETHROUGH               0x0200  /* Enable strikethrough extension. */
 #define MD_FLAG_PERMISSIVEWWWAUTOLINKS      0x0400  /* Enable WWW autolinks (even without any scheme prefix, if they begin with 'www.') */
 #define MD_FLAG_TASKLISTS                   0x0800  /* Enable task list extension. */
+#define MD_FLAG_LATEXMATHSPANS              0x1000  /* Enable $ and $$ containing LaTeX equations. */
+#define MD_FLAG_WIKILINKS                   0x2000  /* Enable wiki links extension. */
 
 #define MD_FLAG_PERMISSIVEAUTOLINKS         (MD_FLAG_PERMISSIVEEMAILAUTOLINKS | MD_FLAG_PERMISSIVEURLAUTOLINKS | MD_FLAG_PERMISSIVEWWWAUTOLINKS)
 #define MD_FLAG_NOHTML                      (MD_FLAG_NOHTMLBLOCKS | MD_FLAG_NOHTMLSPANS)

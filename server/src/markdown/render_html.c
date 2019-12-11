@@ -42,7 +42,8 @@
     #define snprintf _snprintf
 #endif
 
-
+#define WIKILINK_TAG       "a"
+#define WIKILINK_SRC_ATTR  "href"
 
 typedef struct MD_RENDER_HTML_tag MD_RENDER_HTML;
 struct MD_RENDER_HTML_tag {
@@ -50,7 +51,8 @@ struct MD_RENDER_HTML_tag {
     void* userdata;
     unsigned flags;
     int image_nesting_level;
-    const MD_CHAR *input;
+    char escape_map[256];
+    const MD_CHAR* input;
 };
 
 
@@ -70,7 +72,7 @@ render_text(MD_RENDER_HTML* r, const MD_CHAR* text, MD_SIZE size)
     r->process_output(text, size, r->userdata);
 }
 
-#define RENDER_LITERAL(r, literal)    render_text((r), (literal), strlen(literal))
+#define RENDER_LITERAL(r, literal)    render_text((r), (literal), (MD_SIZE) strlen(literal))
 
 
 static void
@@ -80,12 +82,16 @@ render_html_escaped(MD_RENDER_HTML* r, const MD_CHAR* data, MD_SIZE size)
     MD_OFFSET off = 0;
 
     /* Some characters need to be escaped in normal HTML text. */
-    #define HTML_NEED_ESCAPE(ch)                                            \
-            ((ch) == '&' || (ch) == '<' || (ch) == '>' || (ch) == '"')
+    #define HTML_NEED_ESCAPE(ch)        (r->escape_map[(unsigned char)(ch)] != 0)
 
     while(1) {
+        /* Optimization: Use some loop unrolling. */
+        while(off + 3 < size  &&  !HTML_NEED_ESCAPE(data[off+0])  &&  !HTML_NEED_ESCAPE(data[off+1])
+                              &&  !HTML_NEED_ESCAPE(data[off+2])  &&  !HTML_NEED_ESCAPE(data[off+3]))
+            off += 4;
         while(off < size  &&  !HTML_NEED_ESCAPE(data[off]))
             off++;
+
         if(off > beg)
             render_text(r, data + beg, off - beg);
 
@@ -352,6 +358,15 @@ render_close_img_span(MD_RENDER_HTML* r, const MD_SPAN_IMG_DETAIL* det)
     r->image_nesting_level--;
 }
 
+static void
+render_open_wikilink_span(MD_RENDER_HTML* r, const MD_SPAN_WIKILINK_DETAIL* det)
+{
+    RENDER_LITERAL(r, "<" WIKILINK_TAG " " WIKILINK_SRC_ATTR "=\"");
+    render_attribute(r, &det->target, render_html_escaped);
+
+    RENDER_LITERAL(r, "\">");
+}
+
 
 /**************************************
  ***  HTML renderer implementation  ***
@@ -425,12 +440,15 @@ enter_span_callback(MD_SPANTYPE type, void* detail, void* userdata)
     }
 
     switch(type) {
-        case MD_SPAN_EM:        RENDER_LITERAL(r, "<em>"); break;
-        case MD_SPAN_STRONG:    RENDER_LITERAL(r, "<strong>"); break;
-        case MD_SPAN_A:         render_open_a_span(r, (MD_SPAN_A_DETAIL*) detail); break;
-        case MD_SPAN_IMG:       render_open_img_span(r, (MD_SPAN_IMG_DETAIL*) detail); break;
-        case MD_SPAN_CODE:      RENDER_LITERAL(r, "<code>"); break;
-        case MD_SPAN_DEL:       RENDER_LITERAL(r, "<del>"); break;
+        case MD_SPAN_EM:                RENDER_LITERAL(r, "<em>"); break;
+        case MD_SPAN_STRONG:            RENDER_LITERAL(r, "<strong>"); break;
+        case MD_SPAN_A:                 render_open_a_span(r, (MD_SPAN_A_DETAIL*) detail); break;
+        case MD_SPAN_IMG:               render_open_img_span(r, (MD_SPAN_IMG_DETAIL*) detail); break;
+        case MD_SPAN_CODE:              RENDER_LITERAL(r, "<code>"); break;
+        case MD_SPAN_DEL:               RENDER_LITERAL(r, "<del>"); break;
+        case MD_SPAN_LATEXMATH:         RENDER_LITERAL(r, "<x-equation>"); break;
+        case MD_SPAN_LATEXMATH_DISPLAY: RENDER_LITERAL(r, "<x-equation type=\"display\">"); break;
+        case MD_SPAN_WIKILINK:          render_open_wikilink_span(r, (MD_SPAN_WIKILINK_DETAIL*) detail); break;
     }
 
     return 0;
@@ -450,12 +468,15 @@ leave_span_callback(MD_SPANTYPE type, void* detail, void* userdata)
     }
 
     switch(type) {
-        case MD_SPAN_EM:        RENDER_LITERAL(r, "</em>"); break;
-        case MD_SPAN_STRONG:    RENDER_LITERAL(r, "</strong>"); break;
-        case MD_SPAN_A:         RENDER_LITERAL(r, "</a>"); break;
-        case MD_SPAN_IMG:       /*noop, handled above*/ break;
-        case MD_SPAN_CODE:      RENDER_LITERAL(r, "</code>"); break;
-        case MD_SPAN_DEL:       RENDER_LITERAL(r, "</del>"); break;
+        case MD_SPAN_EM:                RENDER_LITERAL(r, "</em>"); break;
+        case MD_SPAN_STRONG:            RENDER_LITERAL(r, "</strong>"); break;
+        case MD_SPAN_A:                 RENDER_LITERAL(r, "</a>"); break;
+        case MD_SPAN_IMG:               /*noop, handled above*/ break;
+        case MD_SPAN_CODE:              RENDER_LITERAL(r, "</code>"); break;
+        case MD_SPAN_DEL:               RENDER_LITERAL(r, "</del>"); break;
+        case MD_SPAN_LATEXMATH:         /*fall through*/
+        case MD_SPAN_LATEXMATH_DISPLAY: RENDER_LITERAL(r, "</x-equation>"); break;
+        case MD_SPAN_WIKILINK:          RENDER_LITERAL(r, "</" WIKILINK_TAG ">"); break;
     }
 
     return 0;
@@ -491,7 +512,7 @@ md_render_html(const MD_CHAR* input, MD_SIZE input_size,
                void (*process_output)(const MD_CHAR*, MD_SIZE, void*),
                void* userdata, unsigned parser_flags, unsigned renderer_flags)
 {
-    MD_RENDER_HTML render = { process_output, userdata, renderer_flags, 0, input };
+    MD_RENDER_HTML render = { process_output, userdata, renderer_flags, 0, { 0 }, input };
 
     MD_PARSER parser = {
         0,
@@ -504,6 +525,11 @@ md_render_html(const MD_CHAR* input, MD_SIZE input_size,
         debug_log_callback,
         NULL
     };
+
+    render.escape_map[(unsigned char)'"'] = 1;
+    render.escape_map[(unsigned char)'&'] = 1;
+    render.escape_map[(unsigned char)'<'] = 1;
+    render.escape_map[(unsigned char)'>'] = 1;
 
     return md_parse(input, input_size, &parser, (void*) &render);
 }

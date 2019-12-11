@@ -1,5 +1,6 @@
 import {connect} from "../flux-ux/utils.js";
 import {AppStore, path, Status} from "./AppStore.js";
+import {TextArea} from "./TextArea.js";
 
 interface PropsDerived {
    isEditing: boolean;
@@ -43,34 +44,6 @@ function Sidebar(props: SidebarProps) {
    );
 }
 
-interface TextAreaProps {
-   onChange: Fn;
-   value: string;
-} 
-
-const SPACES = [ "", " ", "  ", "   "];
-
-function TextArea(props:TextAreaProps) {
-   const textArea = React.useRef<HTMLTextAreaElement>(null!);
-   
-   function onKeyDown(e:React.KeyboardEvent<HTMLTextAreaElement>) {
-      if (e.key === "Tab") {
-         e.preventDefault();
-         const { selectionStart, selectionEnd } = e.currentTarget;
-         let s = props.value;
-         let ix = s.lastIndexOf("\n", selectionStart) + 1;
-         let spaces = ix > selectionStart ? 3 : (3 - ((selectionStart - ix) % 3));
-         const newValue = s.substring(0, selectionStart) + SPACES[spaces] + s.substring(selectionEnd);
-         props.onChange(newValue);
-         if (textArea.current) {
-           textArea.current.value = newValue;
-           textArea.current.selectionStart = textArea.current.selectionEnd = selectionStart + spaces;
-         }
-       }
-   }
-
-   return <textarea ref={textArea} onKeyDown={onKeyDown} onChange={e => props.onChange(e.target.value)} value={props.value} />;
- }
 
 
 function Main(props: MainProps) {
@@ -80,7 +53,7 @@ function Main(props: MainProps) {
          <div className="main-title">{title}</div>
          {props.editing ? <>
             <div className="main-edit">
-               <TextArea onChange={props.onText} value={props.markdown} />
+               <TextArea onChange={props.onText} value={props.markdown} onSave={onDone}/>
             </div>
          </> : <>
                <div className="main-content">
