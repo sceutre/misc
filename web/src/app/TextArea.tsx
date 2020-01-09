@@ -21,12 +21,12 @@ const isMacLike = /(Mac|iPhone|iPod|iPad)/i.test(window.navigator.platform);
 
 function lineStarts(s:string, start:number, end:number):number[] {
    let arr:number[] = [];
-   let ix = s.lastIndexOf('\n', start) + 1;
+   let ix = s.lastIndexOf('\n', start-1) + 1;
    arr.push(ix);
    while (true) {
       ix = s.indexOf('\n', ix);
-      if (ix < 0 || ix >= end) break;
       ix++;
+      if (ix <= 0 || ix >= end) break;
       arr.push(ix);
    }
    return arr;
@@ -197,7 +197,8 @@ export function TextArea(props:TextAreaProps) {
          } 
          if (hasSpaces(s, lines, count)) {
             s = trimSpaces(s, lines, count);
-            applyEdits(s, selectionStart - count, selectionEnd - (count * lines.length), "override")
+            let fromStart = Math.min(count,lineIx);
+            applyEdits(s, selectionStart - fromStart, selectionEnd - (count * lines.length), "override")
          }
       } else {
          // forward
