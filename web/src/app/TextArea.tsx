@@ -101,24 +101,18 @@ export function TextArea(props:TextAreaProps) {
          else if (e.keyCode === KEYCODE_Y && e.ctrlKey && !e.altKey && !e.shiftKey) doRedo(e);
          else if (e.keyCode === KEYCODE_D && e.ctrlKey && !e.altKey && !e.shiftKey) doDeleteLine(e);
          else if (e.keyCode === KEYCODE_S && e.ctrlKey && !e.altKey && !e.shiftKey) doSave(e);
-         else if (e.keyCode === KEYCODE_LEFTBRACKET && !e.ctrlKey && !e.altKey && !e.shiftKey) doLeftBracket(e);
-         else if (e.keyCode === KEYCODE_ENTER) doEnter(e);
       } else if (isMacLike) {
          if (e.keyCode === KEYCODE_TAB) doTab(e);
          else if (e.keyCode === KEYCODE_Z && e.metaKey && !e.shiftKey && !e.altKey) doUndo(e);
          else if (e.keyCode === KEYCODE_Z && e.metaKey && e.shiftKey && !e.altKey) doRedo(e);
          else if (e.keyCode === KEYCODE_D && e.metaKey && !e.altKey && !e.shiftKey) doDeleteLine(e);
          else if (e.keyCode === KEYCODE_S && e.metaKey && !e.altKey && !e.shiftKey) doSave(e);
-         else if (e.keyCode === KEYCODE_LEFTBRACKET && !e.ctrlKey && !e.altKey && !e.shiftKey) doLeftBracket(e);
-         else if (e.keyCode === KEYCODE_ENTER) doEnter(e);
       } else {
          if (e.keyCode === KEYCODE_TAB) doTab(e);
          else if (e.keyCode === KEYCODE_Z && e.ctrlKey && !e.altKey && !e.shiftKey) doUndo(e);
          else if (e.keyCode === KEYCODE_Z && e.ctrlKey && !e.altKey && e.shiftKey) doRedo(e);
          else if (e.keyCode === KEYCODE_D && e.ctrlKey && !e.altKey && !e.shiftKey) doDeleteLine(e);
          else if (e.keyCode === KEYCODE_S && e.ctrlKey && !e.altKey && !e.shiftKey) doSave(e);
-         else if (e.keyCode === KEYCODE_LEFTBRACKET && !e.ctrlKey && !e.altKey && !e.shiftKey) doLeftBracket(e);
-         else if (e.keyCode === KEYCODE_ENTER) doEnter(e);
       }
    }
 
@@ -140,29 +134,6 @@ export function TextArea(props:TextAreaProps) {
          history.current.ix++;
          let r = states[ix + 1];
          applyEdits(r.text, r.afterStart, r.afterEnd, "redo");
-      }
-   }
-
-   function doEnter(e:React.KeyboardEvent<HTMLTextAreaElement>) {
-      const { selectionStart, selectionEnd } = e.currentTarget;
-      if (selectionStart == selectionEnd) {
-         let s = props.value;
-         let ix1 = s.lastIndexOf('\n', selectionStart-1) + 1;
-         let ix2 = s.indexOf('\n', selectionStart);
-         console.log({ix1, ix2, c1: s.charAt(ix1), c2: s.charAt(ix2)});
-         if (s.startsWith("```", ix1) && selectionStart == ix1+3) {
-            e.preventDefault();
-            let newText = s.substring(0, selectionStart) + "\n\n```\n" + s.substring(selectionStart);
-            applyEdits(newText, selectionStart+1, selectionEnd+1, "override");
-         } else {
-            spacesRegex.lastIndex = ix1;
-            let array = spacesRegex.exec(s);
-            if (array && array.index == ix1) {
-               e.preventDefault();
-               let newText = s.substring(0, selectionStart) + "\n" + array[0] + s.substring(selectionStart);
-               applyEdits(newText, selectionStart+1+array[0].length, selectionEnd+1+array[0].length, "override");
-            }
-         }
       }
    }
 
@@ -215,10 +186,6 @@ export function TextArea(props:TextAreaProps) {
    function doSave(e:React.KeyboardEvent<HTMLTextAreaElement>) {
       e.preventDefault();
       props.onSave(null);
-   }
-
-   function doLeftBracket(e:React.KeyboardEvent<HTMLTextAreaElement>) {
-      // if [[ then [_]]
    }
 
    function onChange(e:any) {
