@@ -37,7 +37,7 @@ export class Store<T> {
       this.setData(x);
    }
 
-   private setData(d: Immutable<T>) {
+   protected setData(d: Immutable<T>) {
       this.data = d;
       if (this.rootKey) rootStore.set(this.rootKey, this.data);
       this.notify();

@@ -44,22 +44,23 @@ function Sidebar(props: SidebarProps) {
    );
 }
 
-
-
 function Main(props: MainProps) {
    let title = props.title.replace(/_/g, " ");
+   let isMindMap = title.endsWith("mmap");
    return (
       <div className="main">
          <div className="main-title">{title}</div>
-         {props.editing ? <>
+         {props.editing && <>
             <div className="main-edit">
                <TextArea onChange={props.onText} value={props.markdown} onSave={onDone}/>
             </div>
-         </> : <>
+         </>}
+         {!props.editing && !isMindMap && <>
                <div className="main-content">
                   <div className="markdown-body" dangerouslySetInnerHTML={{__html: props.html}} onClick={props.onClick}></div>
                </div>
-            </>}
+         </>}
+         {!props.editing && isMindMap && <MindMap />}
       </div>
    );
 };
