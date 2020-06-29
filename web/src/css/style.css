@@ -131,3 +131,29 @@
 .main-edit textarea::-webkit-scrollbar-track { background: var(--main-pre-scrollbar-thumb);  }
 .main-edit textarea::-webkit-scrollbar-thumb { background: var(--main-pre-scrollbar-track); }
 .main-edit textarea { scrollbar-color: var(--main-pre-scrollbar-thumb) var(--main-pre-scrollbar-track); }
+
+.mapnode {
+   display: inline-block;
+   position: absolute;
+   background-color: rgb(250, 250, 132);
+   border-radius: 4px;
+   border: 1px solid  rgb(109, 109, 59);
+   max-width: 330px;
+   white-space: pre-line;
+}
+
+.level1 {
+   font-size: 18px;
+   font-weight: bold;
+   border-radius: 50%;
+   border: 2px solid  rgb(109, 109, 59);
+}
+
+.level2 {
+   font-size: 16px;
+   border-radius: 30px;
+   border: 2px solid  rgb(109, 109, 59);
+}
+.level3, .level4, .level5, .level6, .level7, .level8, .level9 {
+   font-size: 12px;
+}

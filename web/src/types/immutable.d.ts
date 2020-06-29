@@ -7,6 +7,10 @@ interface ImmutableMap<K, V> {
    get(key: K): ImmutableAny<V> | undefined;
    has(key: K): boolean;
    readonly size: number;
+   [Symbol.iterator](): IterableIterator<[K, V]>;
+   entries(): IterableIterator<[K, V]>;
+   keys(): IterableIterator<K>;
+   values(): IterableIterator<V>;
 }
 
 interface ImmutableSet<T> {

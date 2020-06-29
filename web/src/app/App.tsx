@@ -1,6 +1,7 @@
 import {connect} from "../flux-ux/utils.js";
 import {AppStore, path, Status} from "./AppStore.js";
 import {TextArea} from "./TextArea.js";
+import {MindMap} from "./MindMap.js";
 
 interface PropsDerived {
    isEditing: boolean;
@@ -9,6 +10,7 @@ interface PropsDerived {
    html: string;
    sidebarHtml: string;
    title: string;
+   isDark:boolean;
 }
 
 interface SidebarProps {
@@ -80,14 +82,15 @@ class App extends React.PureComponent<PropsDerived> {
          html: AppStore.data.generatedHtml,
          sidebarHtml: AppStore.data.generatedSidebarHtml,
          isDirty: AppStore.data.autosaveStatus == Status.WAITING,
-         title: path()
+         title: path(),
+         isDark: AppStore.data.isDark
       }
    }
 
    render() {
-      let {title, isEditing, markdown, html, sidebarHtml, isDirty} = this.props;
+      let {title, isEditing, markdown, html, sidebarHtml, isDirty, isDark} = this.props;
       return (
-         <div className={"overall " + (isDarkTheme() ? "dark" : "") + (isDirty ? " dirty" : "")}>
+         <div className={"overall " + (isDark ? "dark" : "") + (isDirty ? " dirty" : "")}>
             <Sidebar html={sidebarHtml} onEdit={this.onStartEditing} onDone={onDone} onTheme={this.onToggleDark} editing={isEditing} />
             <Main html={html} markdown={markdown} title={title} onText={onText} onClick={this.onContentClick} editing={isEditing} />
          </div>
@@ -110,8 +113,7 @@ class App extends React.PureComponent<PropsDerived> {
    }
 
    onToggleDark = () => {
-      toggleDarkTheme();
-      this.forceUpdate();
+      AppStore.actions.toggleDark();
    }
 
    toggleChecked(lineNum: number) {
@@ -158,7 +160,7 @@ setInterval(async () => {
    }
 }, 10000);
 
-function wait(tm: number) {
+export function wait(tm: number) {
    return new Promise((resolve, reject) => {
       setTimeout(() => resolve(true), tm);
    });
@@ -263,14 +265,6 @@ async function asyncMarkdown(force?: boolean) {
 }
 
 
-function isDarkTheme() {
-   let theme = localStorage.getItem("theme");
-   return theme === "dark";
-}
-
-function toggleDarkTheme() {
-   localStorage.setItem("theme", isDarkTheme() ? "light" : "dark");
-}
 
 
 

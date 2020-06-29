@@ -18,7 +18,7 @@ DEP_FILES := $(C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.d)
 DIRS := $(BIN_DIR) $(patsubst $(SRC_DIR)%,$(BUILD_DIR)%,$(shell find $(SRC_DIR) -type d))
 
 .DEFAULT: all
-.PHONY: all, clean, run, dirs, fresh, debug, release, web, webwatch, install
+.PHONY: all, clean, run, dirs, fresh, debug, release, web, webwatch, install, css
 
 all: debug
 
@@ -77,5 +77,7 @@ install: clean release
 	@rm -rf $(INSTALL_DIR)/misc.exe $(INSTALL_DIR)/srcroot
 	@cp -R $(BIN_DIR)/misc.exe $(BIN_DIR)/srcroot $(INSTALL_DIR)
 	@printf "  \xE2\x9c\x93 $@\n"
+
+css: $(CSS)
 
 -include $(DEP_FILES)

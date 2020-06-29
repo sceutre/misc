@@ -18,6 +18,7 @@ interface AppData {
    htmlStatus: Status;
    htmlSidebarStatus: Status;
    autosaveStatus: Status;
+   isDark:boolean;
 }
 
 export function path() {
@@ -37,7 +38,8 @@ class AppStoreClass extends Store<AppData> {
          markdownStatus: Status.EMPTY,
          htmlStatus: Status.EMPTY,
          htmlSidebarStatus: Status.EMPTY,
-         autosaveStatus: Status.OK
+         autosaveStatus: Status.OK,
+         isDark: isDarkTheme()
       }, "appStore");
    }
 
@@ -73,6 +75,11 @@ class AppStoreClass extends Store<AppData> {
       this.update(x => x.autosaveStatus = d.status);
    };
 
+   private onToggleDark = () => {
+      toggleDarkTheme();
+      this.update(x => x.isDark = isDarkTheme());
+   };
+
    actions = {
       setEditing: Action("setEditing", this.onSetEditing),
       setMarkdown: Action("setMarkdown", this.onSetMarkdown),
@@ -82,7 +89,17 @@ class AppStoreClass extends Store<AppData> {
       setHtmlSidebarStatus: Action("setHtmlSidebarStatus", this.onSetHtmlSidebarStatus),
       setMarkdownStatus: Action("setMarkdownStatus", this.onSetMarkdownStatus),
       setAutosaveStatus: Action("setAutosaveStatus", this.onSetAutosaveStatus),
+      toggleDark: Action("toggleDark", this.onToggleDark)
    };
 }
 
 export const AppStore = new AppStoreClass(); 
+
+function isDarkTheme() {
+   let theme = localStorage.getItem("theme");
+   return theme === "dark";
+}
+
+function toggleDarkTheme() {
+   localStorage.setItem("theme", isDarkTheme() ? "light" : "dark");
+}
