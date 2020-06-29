@@ -237,6 +237,7 @@ hsl(345.6, 27.78%, 75%)`;
 interface Coloring {
    fg:string;
    bg:string;
+   selected:string;
    lines:string;
 }
 
@@ -249,6 +250,7 @@ function computeColoring(val:string, darkMode:boolean):Coloring {
       return {
          fg: darkMode ? "#ffffffdd" : "black",
          bg: `hsl(${h}, ${s}%, ${darkMode ? 40 : 75}%)`,
+         selected: darkMode ?  "hsl(37, 7%, 24%)" : "hsl(37, 7%, 76%)",
          lines: `hsl(${h}, ${s}%, ${darkMode ? 60 : 40}%)`,
       }
    }

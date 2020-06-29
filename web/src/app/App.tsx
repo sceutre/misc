@@ -11,6 +11,7 @@ interface PropsDerived {
    sidebarHtml: string;
    title: string;
    isDark:boolean;
+   isFullscreen:boolean;
 }
 
 interface SidebarProps {
@@ -28,6 +29,7 @@ interface MainProps {
    onText: Fn<string>; 
    onClick: Fn;
    editing: boolean;
+   fullscreen:boolean;
 }
 
 function Sidebar(props: SidebarProps) {
@@ -47,11 +49,13 @@ function Sidebar(props: SidebarProps) {
 }
 
 function Main(props: MainProps) {
+   function onTitleClick() { AppStore.actions.toggleFullscreen() }
+
    let title = props.title.replace(/_/g, " ");
    let isMindMap = title.endsWith("mmap");
    return (
-      <div className="main">
-         <div className="main-title">{title}</div>
+      <div className={"main" + (props.fullscreen ? " fullscreen" : "")}>
+         <div className="main-title" onClick={onTitleClick}>{title}</div>
          {props.editing && <>
             <div className="main-edit">
                <TextArea onChange={props.onText} value={props.markdown} onSave={onDone}/>
@@ -83,16 +87,17 @@ class App extends React.PureComponent<PropsDerived> {
          sidebarHtml: AppStore.data.generatedSidebarHtml,
          isDirty: AppStore.data.autosaveStatus == Status.WAITING,
          title: path(),
-         isDark: AppStore.data.isDark
+         isDark: AppStore.data.isDark,
+         isFullscreen: AppStore.data.isFullscreen
       }
    }
 
    render() {
-      let {title, isEditing, markdown, html, sidebarHtml, isDirty, isDark} = this.props;
+      let {title, isEditing, markdown, html, sidebarHtml, isDirty, isDark, isFullscreen} = this.props;
       return (
          <div className={"overall " + (isDark ? "dark" : "") + (isDirty ? " dirty" : "")}>
-            <Sidebar html={sidebarHtml} onEdit={this.onStartEditing} onDone={onDone} onTheme={this.onToggleDark} editing={isEditing} />
-            <Main html={html} markdown={markdown} title={title} onText={onText} onClick={this.onContentClick} editing={isEditing} />
+            {!isFullscreen && <Sidebar html={sidebarHtml} onEdit={this.onStartEditing} onDone={onDone} onTheme={this.onToggleDark} editing={isEditing} />}
+            <Main html={html} markdown={markdown} title={title} onText={onText} onClick={this.onContentClick} editing={isEditing} fullscreen={isFullscreen}/>
          </div>
       );
    }
@@ -256,8 +261,8 @@ async function asyncMarkdown(force?: boolean) {
       let resp = await fetch("/-/md/" + path());
       if (resp.ok) {
          let text = await resp.text();
-         let lastLoad = text;
-         let lastLoadTime = Date.now();
+         lastLoad = text;
+         lastLoadTime = Date.now();
          AppStore.actions.setMarkdown({markdown: text});
          AppStore.actions.setMarkdownStatus({status: Status.OK});
       }

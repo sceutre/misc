@@ -19,6 +19,7 @@ interface AppData {
    htmlSidebarStatus: Status;
    autosaveStatus: Status;
    isDark:boolean;
+   isFullscreen:boolean;
 }
 
 export function path() {
@@ -39,7 +40,8 @@ class AppStoreClass extends Store<AppData> {
          htmlStatus: Status.EMPTY,
          htmlSidebarStatus: Status.EMPTY,
          autosaveStatus: Status.OK,
-         isDark: isDarkTheme()
+         isDark: isDarkTheme(),
+         isFullscreen: false
       }, "appStore");
    }
 
@@ -80,6 +82,11 @@ class AppStoreClass extends Store<AppData> {
       this.update(x => x.isDark = isDarkTheme());
    };
 
+   private onToggleFullscreen = () => {
+      this.update(x => x.isFullscreen = !x.isFullscreen);
+   };
+
+
    actions = {
       setEditing: Action("setEditing", this.onSetEditing),
       setMarkdown: Action("setMarkdown", this.onSetMarkdown),
@@ -89,7 +96,8 @@ class AppStoreClass extends Store<AppData> {
       setHtmlSidebarStatus: Action("setHtmlSidebarStatus", this.onSetHtmlSidebarStatus),
       setMarkdownStatus: Action("setMarkdownStatus", this.onSetMarkdownStatus),
       setAutosaveStatus: Action("setAutosaveStatus", this.onSetAutosaveStatus),
-      toggleDark: Action("toggleDark", this.onToggleDark)
+      toggleDark: Action("toggleDark", this.onToggleDark),
+      toggleFullscreen: Action("toggleFullscreen", this.onToggleFullscreen),
    };
 }
 

@@ -25,9 +25,14 @@
 .main {
    flex-basis: 75%;
    max-width: 75%;
-   overflow-y:auto;
+   overflow:auto;
    padding: 20px 20px 0 20px;
    background: var(--main-bg);
+}
+
+.fullscreen {
+   flex-basis: 100%;
+   max-width: 100%;
 }
 
 .sidebar {
@@ -62,6 +67,7 @@
    width: 70px;
    height: 70px;
    opacity: 0.2;
+   cursor: pointer;
 }
 
 .dirty .logo {
@@ -95,6 +101,8 @@
    font-size: 30px;
    margin-bottom: 20px;
    color: var(--main-fg);
+   user-select: none;
+   cursor: pointer;
 }
 
 .main-edit {
@@ -122,14 +130,17 @@
 ::-webkit-scrollbar { width: 12px; height: 12px; }
 .main::-webkit-scrollbar-track { background: var(--main-scrollbar-thumb);  }
 .main::-webkit-scrollbar-thumb { background: var(--main-scrollbar-track); }
+.main::-webkit-scrollbar-thumb:hover { background: var(--main-scrollbar-hover); }
 .main { scrollbar-color: var(--main-scrollbar-thumb) var(--main-scrollbar-track); }
 
 .sidebar::-webkit-scrollbar-track { background: var(--sidebar-scrollbar-thumb);  }
 .sidebar::-webkit-scrollbar-thumb { background: var(--sidebar-scrollbar-track); }
+.sidebar::-webkit-scrollbar-thumb:hover { background: var(--sidebar-scrollbar-hover); }
 .sidebar { scrollbar-color: var(--sidebar-scrollbar-thumb) var(--sidebar-scrollbar-track); }
 
 .main-edit textarea::-webkit-scrollbar-track { background: var(--main-pre-scrollbar-thumb);  }
 .main-edit textarea::-webkit-scrollbar-thumb { background: var(--main-pre-scrollbar-track); }
+.main-edit textarea::-webkit-scrollbar-thumb:hover { background: var(--main-pre-scrollbar-hover); }
 .main-edit textarea { scrollbar-color: var(--main-pre-scrollbar-thumb) var(--main-pre-scrollbar-track); }
 
 .mapnode {
@@ -140,6 +151,7 @@
    border: 1px solid  rgb(109, 109, 59);
    max-width: 330px;
    white-space: pre-line;
+   cursor: pointer;
 }
 
 .level1 {
@@ -156,4 +168,7 @@
 }
 .level3, .level4, .level5, .level6, .level7, .level8, .level9 {
    font-size: 12px;
+}
+.sel {
+   border-style: dashed;
 }

@@ -14,6 +14,7 @@ interface PropsDerived {
    minY:number;
    maxY:number;
    isDark:boolean;
+   selectionId:number;
 }
 
 class MindMap extends React.PureComponent<PropsDerived> {
@@ -39,44 +40,50 @@ class MindMap extends React.PureComponent<PropsDerived> {
          kids: MindMapStore.data.kids,
          rootId: MindMapStore.data.rootId,
          paths,
-         minX, minY, maxX, maxY, isDark: AppStore.data.isDark
+         minX, minY, maxX, maxY, isDark: AppStore.data.isDark,
+         selectionId: MindMapStore.data.selectedId
       }
    }
 
    render() {
-      let {nodes, paths, minX, minY, maxX, maxY, isDark} = this.props;
+      let {nodes, paths, minX, minY, maxX, maxY, isDark, selectionId} = this.props;
       return <div style={{position: "relative", top:-minY + "px", left: -minX + "px"}}>
          <svg style={{position:"absolute", top:minY + "px", left:minX + "px", height: (maxY - minY) + "px", width: (maxX - minX) + "px", pointerEvents: "none"}}>
             {paths}
          </svg>
-         {Array.from(nodes.values()).map(x => <MindMapNode key={x.id} node={x} isDark={isDark} />)}
+         {Array.from(nodes.values()).map(x => <MindMapNode key={x.id} node={x} isDark={isDark} isSelected={selectionId == x.id}/>)}
       </div>
    }
 
 }
 
-const MindMapNode: React.SFC<{node: MapNode, isDark:boolean}> = React.memo(({node, isDark}) => {
+const MindMapNode: React.SFC<{node: MapNode, isDark:boolean, isSelected:boolean}> = React.memo(({node, isDark, isSelected}) => {
+   function onClick() { MindMapStore.actions.setSelectedNode({id:isSelected ? 0 : node.id}); }
+
    let array = getPalette(isDark);
    let c = array[node.L2 % array.length];
-   return <div className={"mapnode level" + node.level} style={{
+   return <div className={"mapnode level" + node.level + (isSelected ? " sel" : "")} onClick={onClick} style={{
       top: node.y,
       left: node.x,
       height: node.height,
       width: node.width,
-      backgroundColor: c.bg,
+      backgroundColor: (isSelected ? c.selected : c.bg),
       color: c.fg,
       borderColor: c.lines
    }}><div style={{
       display: "inline-block",
       position: "relative",
       top: (getNodeVertPad(node.level)/2) + "px",
-      left: (getNodeHorizPad(node.level)/2) + "px"
+      left: (getNodeHorizPad(node.level)/2) + "px",
+      pointerEvents: "none",
+      userSelect: "none"
    }}>{node.text}</div></div>;
 });
 
 
 async function asyncParse(text: string) {
    await wait(0);
+   if (MindMapStore.data.text == text) return;
    MindMapStore.actions.parse({text});
 }
 

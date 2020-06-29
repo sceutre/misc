@@ -1,7 +1,7 @@
 import {Store} from "../flux-ux/store.js";
 import {parseWikiMap, layoutAll} from "./MindMapUtils.js";
 import {Action} from "../flux-ux/action.js";
-import {AppStore} from "./AppStore.js";
+import {path, AppStore} from "./AppStore.js";
 
 export const enum Direction { LEFT, RIGHT };
 
@@ -55,7 +55,7 @@ class MindMapStoreClass extends Store<MapNodeStore> {
    constructor() {
       super({selectedId: 0, text: "", nodes: new Map(), kids: new Map(), rootId: 0, originX: 800, originY: 300}, "mindMapStore");
       AppStore.actions.setMarkdown.add(d => {
-         this.onParse({ text: d.markdown });
+         if (path().endsWith("mmap")) this.onParse({ text: d.markdown });
       })
    }
 
@@ -96,6 +96,13 @@ class MindMapStoreClass extends Store<MapNodeStore> {
       })
    }
 
+   private onSetSelectedNode = (d:{id:number}) => {
+      this.update(x => {
+         x.selectedId = d.id;
+      })
+   }
+
+
    private onUpdateLabel = (d:{id:number, label:string}) => {
       this.update(x => {
          x.nodes = new Map(x.nodes);
@@ -128,7 +135,8 @@ class MindMapStoreClass extends Store<MapNodeStore> {
       parse: Action("parse", this.onParse),
       addKid: Action("addKid", this.onAddKid),
       addPeer: Action("addPeer", this.onAddPeer),
-      setOrogin: Action("setOrigin", this.onSetOrigin),
+      setOrigin: Action("setOrigin", this.onSetOrigin),
+      setSelectedNode: Action("setSelectedNode", this.onSetSelectedNode),
       updateLabel: Action("updateLabel", this.onUpdateLabel),
    };
 

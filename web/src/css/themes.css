@@ -22,10 +22,13 @@
    --main-table-border:     hsl(38, 39%, 80%);
 
    --main-pre-scrollbar-thumb:    hsl(38, 39%, 78%);
+   --main-pre-scrollbar-hover:    hsl(38, 39%, 70%);
    --main-pre-scrollbar-track:    hsl(38, 39%, 83%);
    --main-scrollbar-thumb:        hsl(38, 39%, 85%);
+   --main-scrollbar-hover:        hsl(38, 39%, 70%);
    --main-scrollbar-track:        hsl(38, 39%, 90%);
    --sidebar-scrollbar-thumb:     hsl(38, 20%, 60%);
+   --sidebar-scrollbar-hover:     hsl(38, 20%, 50%);
    --sidebar-scrollbar-track:     hsl(38, 20%, 65%);
 
 }
@@ -53,10 +56,13 @@
    --main-table-border:     hsl(38, 39%, 20%);
 
    --main-pre-scrollbar-thumb:    hsl(38, 39%, 14%);
+   --main-pre-scrollbar-hover:    hsl(38, 39%, 24%);
    --main-pre-scrollbar-track:    hsl(38, 39%, 10%);
    --main-scrollbar-thumb:        hsl(38, 39%, 7%);
+   --main-scrollbar-hover:        hsl(38, 39%, 17%);
    --main-scrollbar-track:        hsl(38, 39%, 3%);
    --sidebar-scrollbar-thumb:     hsl(38, 20%, 32%);
+   --sidebar-scrollbar-hover:     hsl(38, 20%, 42%);
    --sidebar-scrollbar-track:     hsl(38, 20%, 28%);
 }
 
