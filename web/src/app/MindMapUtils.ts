@@ -1,22 +1,74 @@
-import {MapNode, Direction, newMapNode, MapNodeStore} from "./MindMapStore.js";
+import {MindMapStore} from "./MindMapStore";
 
-const VERTICAL_PAD = [0,10,15,15, 5];
-const HORIZONTAL_PAD = [0,10,80];
-const NODE_PAD_HORIZ = [0,40,30,10];
-const NODE_PAD_VERT = [0,34,24,10];
+export const enum Direction {LEFT, RIGHT};
 
-export function layoutAll(st: MapNodeStore): MapNode[] {
+export interface MapNode {
+   id: number;
+   parentId: number;
+   level: number;
+   text: string;
+   dir: Direction;
+   x: number;
+   y: number;
+   height: number;
+   width: number;
+   heightFull: number;
+   widthFull: number;
+   L2: number;
+}
+
+interface TextMeasurement {
+   ascent: number;
+   descent: number;
+   height: number;
+   width: number;
+   recursiveHeight: number;
+}
+
+export interface ColoringDetails {
+   fg: string;
+   bg: string;
+   selected: string;
+   lines: string;
+}
+
+export interface Coloring {
+   dark: ColoringDetails;
+   normal: ColoringDetails;
+}
+
+type ColorMap = Map<number, Coloring>;
+type NodeMap = Map<number, MapNode>;
+type KidMap = Map<number, number[]>;
+
+const nbsp = String.fromCharCode(160);
+const VERTICAL_PAD = [0, 10, 15, 15, 5];
+const HORIZONTAL_PAD = [0, 10, 80];
+const NODE_PAD_HORIZ = [0, 40, 30, 10];
+const NODE_PAD_VERT = [0, 34, 24, 10];
+const measureCache = new Map<string, TextMeasurement>();
+const palette =
+   `hsl(165.6, 27.78%, 75%)
+hsl(34.34, 85.8%, 75%)
+hsl(0, 82.76%, 75%)
+hsl(285.6, 27.78%, 75%)
+hsl(214.34, 85.8%, 75%)
+hsl(345.6, 27.78%, 75%)`;
+const AllColors: Coloring[] = palette.split("\n").filter(x => x.trim().length > 0).map(x => computeColoring(x));
+
+
+export function layoutAll(nodes: NodeMap, kids: KidMap, rootId: number, originX: number, originY: number): MapNode[] {
    let changed: MapNode[] = [];
-   let sizes = measure(st);
+   let sizes = measure(nodes, kids, rootId);
    // root is a special case
-   let root = st.nodes.get(st.rootId)!;
+   let root = nodes.get(rootId)!;
    let rootSz = sizes.get(root.id)!;
-   updateChanged(root, st.originX, st.originY, rootSz.height, rootSz.width, rootSz.recursiveHeight, changed);
+   updateChanged(root, originX, originY, rootSz.height, rootSz.width, rootSz.recursiveHeight, changed);
 
    let lefties: MapNode[] = [];
    let righties: MapNode[] = [];
-   let leftH=0, rightH = 0;
-   for (let [k,n] of st.nodes) {
+   let leftH = 0, rightH = 0;
+   for (let [k, n] of nodes) {
       if (n.level == 2) {
          if (n.dir == Direction.LEFT) {lefties.push(n); leftH += sizes.get(n.id)!.recursiveHeight + getVPad(n.level);}
          if (n.dir == Direction.RIGHT) {righties.push(n); rightH += sizes.get(n.id)!.recursiveHeight + getVPad(n.level);}
@@ -24,35 +76,34 @@ export function layoutAll(st: MapNodeStore): MapNode[] {
    }
    if (leftH > 0) leftH -= getVPad(2);
    if (rightH > 0) rightH -= getVPad(2);
-   let leftY = st.originY - (leftH / 2), leftX = st.originX - getHPad(2);
-   let rightY = st.originY - (rightH / 2), rightX = st.originX + rootSz.width + getHPad(2);
+   let leftY = originY - (leftH / 2), leftX = originX - getHPad(2);
+   let rightY = originY - (rightH / 2), rightX = originX + rootSz.width + getHPad(2);
 
-   for (let e of lefties) { 
+   for (let e of lefties) {
       subtree(e, leftX, leftY);
       leftY += sizes.get(e.id)!.recursiveHeight + getVPad(e.level);
    }
-   for (let e of righties) { 
+   for (let e of righties) {
       subtree(e, rightX, rightY);
       rightY += sizes.get(e.id)!.recursiveHeight + getVPad(e.level);
    }
 
-   function subtree(node:MapNode, x:number, y:number) {
+   function subtree(node: MapNode, x: number, y: number) {
       let tm = sizes.get(node.id)!;
       let deltaY = (tm.recursiveHeight - tm.height) / 2;
       let deltaX = (node.dir == Direction.LEFT ? -tm.width : 0);
       updateChanged(node, x + deltaX, y + deltaY, tm.height, tm.width, tm.recursiveHeight, changed);
       let kidX = node.dir == Direction.RIGHT ? (x + tm.width + getHPad(node.level)) : (x - tm.width - getHPad(node.level));
       let kidY = y;
-      for (let id of st.kids.get(node.id)!) {
-         let kid = st.nodes.get(id)!;
+      for (let id of kids.get(node.id)!) {
+         let kid = nodes.get(id)!;
          subtree(kid, kidX, kidY);
          kidY += sizes.get(kid.id)!.recursiveHeight + getVPad(kid.level);
       }
    }
-   
+
    return changed;
 }
-
 
 function getVPad(i: number) {
    let n = VERTICAL_PAD.length;
@@ -74,19 +125,19 @@ export function getNodeVertPad(i: number) {
    return NODE_PAD_VERT[i < n ? i : n - 1];
 }
 
-function measure(st: MapNodeStore) {
+function measure(nodes: NodeMap, kids: KidMap, rootId: number) {
    let sizes: Map<number, TextMeasurement> = new Map();
-   for (let [k, v] of st.nodes) {
+   for (let [k, v] of nodes) {
       sizes.set(v.id, measureText(v.level, v.text));
    }
-   recurse(st.rootId);
+   recurse(rootId);
    function recurse(id: number) {
-      let array = st.kids.get(id)!;
+      let array = kids.get(id)!;
       let h = 0;
       for (let i of array) {
          h += recurse(i);
       }
-      h += getVPad(st.nodes.get(id)!.level + 1) * (array.length-1);
+      h += getVPad(nodes.get(id)!.level + 1) * (array.length - 1);
       let val = Math.max(h, sizes.get(id)!.height);
       sizes.get(id)!.recursiveHeight = val;
       return val;
@@ -96,7 +147,7 @@ function measure(st: MapNodeStore) {
 
 function updateChanged(root: MapNode, x: number, y: number, height: number, width: number, heightFull: number, changed: MapNode[]) {
    if (root.x != x || root.y != y || root.width != width || root.height != height
-      || root.heightFull != heightFull ) {
+      || root.heightFull != heightFull) {
       changed.push(Object.assign({}, root, {x, y, width, height, heightFull}));
    }
 
@@ -104,12 +155,9 @@ function updateChanged(root: MapNode, x: number, y: number, height: number, widt
 
 export function parseWikiMap(text: string) {
    function parseLine(line: string) {
-      let level = (line.length - line.trimLeft().length) + 1;
-      let label = line.trim().replace("\\n", "\n");
-      if (label.startsWith("*")) {
-         level = Math.floor(level / 3);
-         label = label.substring(1).trimLeft();
-      }
+      let t = line.trim();
+      let level = t.length == 0 ? 0 : (line.length - line.trimLeft().length) + 1;
+      let label = t.replace("\\n", "\n").replace("\\e", "").replace("\\s", "\\");
       return {level, label};
    }
 
@@ -119,12 +167,16 @@ export function parseWikiMap(text: string) {
    let kids: Map<number, number[]> = new Map();
    let lines = text.split("\n");
    let L2 = 0;
+   let L2kids: MapNode[] = [];
 
    for (let line of lines) {
       let {level, label} = parseLine(line);
-      if (!label) continue;
-      if (level == 2) L2++;
+      if (!level) continue;
       let node: MapNode = newMapNode(level, label, id++, L2);
+      if (level == 1 || level == 2) {
+         node.L2 = node.id;
+         L2 = node.id;
+      }
       kids.set(node.id, []);
       if (parents.length == 0) {
          all.push(node);
@@ -146,24 +198,19 @@ export function parseWikiMap(text: string) {
          }
          all.push(node);
          kids.get(p.id)!.push(node.id);
-         node.ordinal = kids.get(p.id)!.length;
-         node.dir = level == 2 ? (node.ordinal % 2 == 0 ? Direction.RIGHT : Direction.LEFT) : p.dir;
+         node.dir = p.dir;
+         if (node.level == 2) {
+            let lefts = 0;
+            for (let i of L2kids) {lefts += i.dir == Direction.LEFT ? 1 : -1}
+            node.dir = lefts < 0 ? Direction.LEFT : Direction.RIGHT;
+            L2kids.push(node);
+         }
       }
    }
 
    return {all, kids, id}
 }
 
-
-const nbsp = String.fromCharCode(160);
-
-interface TextMeasurement {
-   ascent: number;
-   descent: number;
-   height: number;
-   width: number;
-   recursiveHeight: number;
-}
 
 /*  Returns width, height, ascent, descent in pixels for the specified text and font.
     The ascent and descent are measured from the baseline. Note that we add/remove
@@ -211,8 +258,6 @@ function measureTextImpl(level: number, text: string): TextMeasurement {
    return result;
 };
 
-const measureCache = new Map<string, TextMeasurement>();
-
 function measureText(level: number, text: string) {
    let k = text + level;
    let rez = measureCache.get(k);
@@ -226,43 +271,69 @@ function measureText(level: number, text: string) {
    return rez;
 }
 
-const palette = 
-`hsl(165.6, 27.78%, 75%)
-hsl(34.34, 85.8%, 75%)
-hsl(0, 82.76%, 75%)
-hsl(285.6, 27.78%, 75%)
-hsl(214.34, 85.8%, 75%)
-hsl(345.6, 27.78%, 75%)`;
-
-interface Coloring {
-   fg:string;
-   bg:string;
-   selected:string;
-   lines:string;
-}
-
-function computeColoring(val:string, darkMode:boolean):Coloring {
+function computeColoring(val: string): Coloring {
    let match = val.match(/\(([0-9.]+), ([0-9.]+)%, ([0-9.]+)%\)/);
    if (match) {
       let h = +match[1];
       let s = +match[2];
       let L = +match[3];
       return {
-         fg: darkMode ? "#ffffffdd" : "black",
-         bg: `hsl(${h}, ${s}%, ${darkMode ? 40 : 75}%)`,
-         selected: darkMode ?  "hsl(37, 7%, 24%)" : "hsl(37, 7%, 76%)",
-         lines: `hsl(${h}, ${s}%, ${darkMode ? 60 : 40}%)`,
+         dark: {
+            fg: "#ffffffdd",
+            bg: `hsl(${h}, ${s}%, 40%)`,
+            selected: "hsl(37, 7%, 24%)",
+            lines: `hsl(${h}, ${s}%, 60%)`,
+         },
+         normal: {
+            fg: "black",
+            bg: `hsl(${h}, ${s}%, 75%)`,
+            selected: "hsl(37, 7%, 76%)",
+            lines: `hsl(${h}, ${s}%, 40%)`,
+         }
       }
    }
    throw "bad input " + val;
 }
 
-export const NormalColors:Coloring[] = [];
-export const DarkColors:Coloring[] = [];
-
-palette.split("\n").forEach(s => {
-   if (s) {
-      NormalColors.push(computeColoring(s, false));
-      DarkColors.push(computeColoring(s, true));
+export function newMapNode(level: number, label: string, id: number, L2: number): MapNode {
+   return {
+      dir: Direction.RIGHT,
+      height: 0,
+      heightFull: 0,
+      id,
+      level,
+      parentId: 0,
+      text: label,
+      width: 0,
+      x: 0,
+      y: 0,
+      widthFull: 0,
+      L2: L2
    }
-});
+}
+
+export function nextColor(map: ColorMap) {
+   if (map.size == 0) return AllColors[0];
+   let counts:Map<Coloring, number> = new Map();
+   for (let [k,v] of map) counts.set(v, (counts.get(v) || 0) + 1);
+   for (let c of AllColors) if (!counts.has(c)) return c; 
+   let min = Number.MAX_SAFE_INTEGER;
+   let col:Coloring;
+   for (let [k,v] of counts)
+      if (v < min) {
+         min = v;
+         col = k;
+      }
+   return col!
+}
+
+export function mindMapToString(nodes:NodeMap, kids:KidMap, rootId:number) {
+   function recurse(id:number, indent:number) {
+      let n = nodes.get(id)!;
+      let t = n.text.trim();
+      let s = " ".repeat(indent) + (t.length == 0 ? "\\e" : t.replace("\\", "\\s").replace("\n", "\\n")) + "\n";
+      for (let k of kids.get(id)!) s += recurse(k, indent+1);
+      return s;
+   }
+   return recurse(rootId, 0);
+}

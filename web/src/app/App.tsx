@@ -53,6 +53,7 @@ function Main(props: MainProps) {
 
    let title = props.title.replace(/_/g, " ");
    let isMindMap = title.endsWith("mmap");
+   if (isMindMap) title = title.substring(0, title.length - 4).trim();
    return (
       <div className={"main" + (props.fullscreen ? " fullscreen" : "")}>
          <div className="main-title" onClick={onTitleClick}>{title}</div>
@@ -186,6 +187,14 @@ async function onText(s: string) {
       autosaveTimeout = window.setTimeout(autosave, 1000 * 5);
       AppStore.actions.setAutosaveStatus({status: Status.WAITING});
    }
+}
+
+export async function onTextExternal(s: string) {
+   await wait(0);
+   if (autosaveTimeout) {clearTimeout(autosaveTimeout); autosaveTimeout = 0;}
+   AppStore.actions.setMarkdown({markdown: s});
+   autosaveTimeout = window.setTimeout(autosave, 1000 * 2);
+   AppStore.actions.setAutosaveStatus({status: Status.WAITING});
 }
 
 async function autosave() {

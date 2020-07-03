@@ -172,3 +172,20 @@
 .sel {
    border-style: dashed;
 }
+
+@keyframes cursor-blink { 
+   0% { background-color: var(--mmap-edit-bg); }
+   50% { background-color: var(--main-fg); }
+   100% { background-color: var(--mmap-edit-bg); }
+ }
+
+ .cursor {
+    white-space: pre;
+    width: 1px;
+    animation: cursor-blink steps(1) 800ms infinite;
+    display: inline-block;
+ }
+
+ .cursor:before {
+   content: " ";
+}
