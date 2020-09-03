@@ -3,6 +3,21 @@ SRC_DIR := server/src
 BUILD_DIR := build
 INSTALL_DIR := ../../apps/Misc
 
+ifeq ($(OS),Windows_NT)
+  detected_OS := Windows
+else
+  detected_OS := $(shell uname)
+endif
+
+ifeq ($(detected_OS),Windows)
+   C_FILES := $(shell find $(SRC_DIR) -name '*.c' -not -path '*/os-linux/*' -not -path '*/os-mac/*')
+else ifeq ($(detected_OS),Darwin)
+   C_FILES := $(shell find $(SRC_DIR) -name '*.c' -not -path '*/os-linux/*' -not -path '*/os-win32/*')
+else
+   C_FILES := $(shell find $(SRC_DIR) -name '*.c' -not -path '*/os-win32/*' -not -path '*/os-mac/*')
+endif
+
+
 CC := gcc
 CFLAGS = -std=c99 -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d 
 CFLAGS += -fPIC -DNO_SSL -Wall -Wno-unused-variable -Wno-unused-function -Wno-pointer-sign -Werror
@@ -12,7 +27,6 @@ JS := $(BIN_DIR)/srcroot/prod/bundle.js
 CSS := $(BIN_DIR)/srcroot/prod/bundle.css
 ASSETS := $(BIN_DIR)/assets.info
 
-C_FILES := $(shell find $(SRC_DIR) -name '*.c')
 OBJ_FILES := $(C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 DEP_FILES := $(C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.d)
 DIRS := $(BIN_DIR) $(patsubst $(SRC_DIR)%,$(BUILD_DIR)%,$(shell find $(SRC_DIR) -type d))

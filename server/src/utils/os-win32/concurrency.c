@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "log.h"
-#include "list.h"
-#include "concurrency.h"
+#include "../log.h"
+#include "../list.h"
+#include "../concurrency.h"
 
 struct Mutex_s {
    SRWLOCK srwLock;

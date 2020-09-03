@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "concurrency.h"
-#include "log.h"
-#include "sockets.h"
+#include "../concurrency.h"
+#include "../log.h"
+#include "../sockets.h"
 
 #define SOCKET_READ_BUFFER_SZ 8192
 #define POOL_SIZE 10

@@ -10,12 +10,13 @@
 #include "http/web.h"
 #include "http/files.h"
 #include "tests/tests.h"
-#include "markdown/render_html.h"
+#include "markdown/md4c-html.h"
 #include "http/mime.h"
+#include <pthread.h>
 
 #define TOOLTIP "Misc documentation server - built " __DATE__ 
 
-#define PARSER_FLAGS (MD_FLAG_STRIKETHROUGH | MD_FLAG_TABLES | MD_FLAG_NOINDENTEDCODEBLOCKS | MD_FLAG_TASKLISTS | MD_FLAG_WIKILINKS)
+#define PARSER_FLAGS (MD_FLAG_STRIKETHROUGH | MD_FLAG_TABLES | MD_FLAG_NOINDENTEDCODEBLOCKS | MD_FLAG_TASKLISTS | MD_FLAG_WIKILINKS | MD_FLAG_UNDERLINE)
 #define RENDER_FLAGS 0
 
 #define FILE_MD 1
@@ -57,7 +58,7 @@ static void saveMD(const char *text, unsigned int size, void *userdata) {
 static bool markdownGet(HttpContext ctx, void *arg) {
    char *filename = normalizedPath(dataRoot, get_req(ctx, H_LOCALPATH), "md");
    Bytearray input = bytearray_readfile(filename);
-   if (input) md_render_html(input->bytes, input->size, saveMD, ctx, PARSER_FLAGS, RENDER_FLAGS);
+   if (input) md_html(input->bytes, input->size, saveMD, ctx, PARSER_FLAGS, RENDER_FLAGS);
    http_response_headers(ctx, 200, false, "text/html");
    http_send(ctx);
    return true;

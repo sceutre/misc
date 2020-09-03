@@ -110,7 +110,7 @@ class App extends React.PureComponent<PropsDerived> {
    onContentClick = (e: any) => {
       let t: HTMLElement | null = e.target;
       while (t) {
-         let n = t.getAttribute("data-line");
+         let n = t.getAttribute("data-ix");
          if (n !== null && typeof n != undefined) {
             this.toggleChecked(+n);
          }
@@ -122,9 +122,15 @@ class App extends React.PureComponent<PropsDerived> {
       AppStore.actions.toggleDark();
    }
 
-   toggleChecked(lineNum: number) {
+   toggleChecked(index: number) {
       let lines = this.props.markdown.split("\n");
-      let matches = /^([^[]+) \[([xX ])\] (.*)$/.exec(lines[lineNum]);
+      let i = 0;
+      while (true) {
+         if (lines[i].length > index || i == lines.length - 1) break;
+         index -= lines[i].length+1;
+         i++;
+      }
+      let matches = /^([^[]+) \[([xX ])\] (.*)$/.exec(lines[i]);
       if (matches) {
          let prefix = matches[1];
          let mid = matches[2];
@@ -132,7 +138,7 @@ class App extends React.PureComponent<PropsDerived> {
          mid = (mid == " ") ? "x" : " ";
          suffix = suffix.replace(/^~(.*)~$/, "$1");
          if (mid == "x") suffix = "~" + suffix + "~";
-         lines[lineNum] = prefix + " [" + mid + "] " + suffix;
+         lines[i] = prefix + " [" + mid + "] " + suffix;
          onText(lines.join("\n"));
       }
    }

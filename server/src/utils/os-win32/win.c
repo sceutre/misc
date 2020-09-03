@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include "win.h"
-#include "list.h"
-#include "concurrency.h"
-#include "utils.h"
+#include "../win.h"
+#include "../list.h"
+#include "../concurrency.h"
+#include "../utils.h"
 
 #define ICON_ID 1
 #define TRAY_MESSAGE (WM_APP + 1)
