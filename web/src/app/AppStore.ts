@@ -41,7 +41,7 @@ class AppStoreClass extends Store<AppData> {
          htmlSidebarStatus: Status.EMPTY,
          autosaveStatus: Status.OK,
          isDark: isDarkTheme(),
-         isFullscreen: false
+         isFullscreen: isFullScreen(),
       }, "appStore");
    }
 
@@ -83,7 +83,8 @@ class AppStoreClass extends Store<AppData> {
    };
 
    private onToggleFullscreen = () => {
-      this.update(x => x.isFullscreen = !x.isFullscreen);
+      toggleFullScreen();
+      this.update(x => x.isFullscreen = isFullScreen());
    };
 
 
@@ -110,4 +111,13 @@ function isDarkTheme() {
 
 function toggleDarkTheme() {
    localStorage.setItem("theme", isDarkTheme() ? "light" : "dark");
+}
+
+function isFullScreen() {
+   let val = localStorage.getItem("screen");
+   return val === "full";
+}
+
+function toggleFullScreen() {
+   localStorage.setItem("screen", isFullScreen() ? "normal" : "full");
 }
