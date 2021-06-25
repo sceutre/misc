@@ -28,13 +28,14 @@ class MindMap extends React.PureComponent<PropsDerived> {
       let paths: any[] = [];
       let minX = Number.MAX_SAFE_INTEGER, minY = Number.MAX_SAFE_INTEGER, maxX = 0, maxY = 0;
       for (let [k, v] of MindMapStore.data.nodes) {
+         if (!v.showing) continue;
          minX = Math.min(minX, v.x);
          minY = Math.min(minY, v.y);
          maxX = Math.max(maxX, v.x + v.width);
          maxY = Math.max(maxY, v.y + v.height);
       }
       for (let [k, v] of MindMapStore.data.nodes) {
-         if (v.level == 1) continue;
+         if (v.level == 1 || !v.showing) continue;
          paths.push(makePath(MindMapStore.data.colors, v, MindMapStore.data.nodes.get(v.parentId)!, minX, minY));
       }
       return {
@@ -63,10 +64,10 @@ class MindMap extends React.PureComponent<PropsDerived> {
          <svg style={{position: "absolute", top: minY + "px", left: minX + "px", height: (maxY - minY) + "px", width: (maxX - minX) + "px", pointerEvents: "none"}}>
             {paths}
          </svg>
-         {Array.from(nodes.values()).map(x => <MindMapNode
+         {Array.from(nodes.values()).map(x => x.showing ? <MindMapNode
             key={x.id} node={x} isDark={isDark} isSelected={selectionId == x.id}
             cursorIx={selectionId == x.id ? cursorIx : 0} colors={colors}
-         />)}
+         /> : null)}
       </div>
    }
 
@@ -262,5 +263,10 @@ function makePath(colors:ImmutableMap<number, Coloring>, node: MapNode, parent: 
       let s = (pt2_x - pt1_x) * 0.05;
       str = ["M", pt1_x, pt1_y, "L", pt1_x + s, pt1_y, "C", pt1_x + s + d, pt1_y, pt2_x - d, pt2_y, pt2_x, pt2_y].join(" ");
    }
-   return <path key={node.id} d={str} fill="transparent" stroke={c.lines} />;
+   return <path key={node.id} d={str} fill="transparent" stroke={c.lines} onClick={() => pathOnClick(parent.id, parent.text)}  />;
+}
+
+
+function pathOnClick(parentId:number, parentName:string) {
+   console.log("clicked " + parentName);
 }

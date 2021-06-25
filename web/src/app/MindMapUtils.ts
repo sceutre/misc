@@ -15,6 +15,8 @@ export interface MapNode {
    heightFull: number;
    widthFull: number;
    L2: number;
+   collapsed:boolean;
+   showing:boolean;
 }
 
 interface TextMeasurement {
@@ -133,12 +135,13 @@ function measure(nodes: NodeMap, kids: KidMap, rootId: number) {
    recurse(rootId);
    function recurse(id: number) {
       let array = kids.get(id)!;
+      let me = nodes.get(id)!;
       let h = 0;
       for (let i of array) {
          h += recurse(i);
       }
-      h += getVPad(nodes.get(id)!.level + 1) * (array.length - 1);
-      let val = Math.max(h, sizes.get(id)!.height);
+      h += getVPad(me.level + 1) * (array.length - 1);
+      let val = Math.max(me.collapsed ? 0 : h, sizes.get(id)!.height);
       sizes.get(id)!.recursiveHeight = val;
       return val;
    }
@@ -157,8 +160,10 @@ export function parseWikiMap(text: string) {
    function parseLine(line: string) {
       let t = line.trim();
       let level = t.length == 0 ? 0 : (line.length - line.trimLeft().length) + 1;
-      let label = t.replace("\\n", "\n").replace("\\e", "").replace("\\s", "\\");
-      return {level, label};
+      let label = t.replace("\\n", "\n").replace("\\e", "").replace("\\s", "\\").trim();
+      let collapsed = t.startsWith("\\c");
+      if (collapsed) label = label.substring(2);
+      return {level, label, collapsed};
    }
 
    let id = 1;
@@ -170,9 +175,10 @@ export function parseWikiMap(text: string) {
    let L2kids: MapNode[] = [];
 
    for (let line of lines) {
-      let {level, label} = parseLine(line);
+      let {level, label, collapsed} = parseLine(line);
       if (!level) continue;
       let node: MapNode = newMapNode(level, label, id++, L2);
+      node.collapsed = collapsed;
       if (level == 1 || level == 2) {
          node.L2 = node.id;
          L2 = node.id;
@@ -185,16 +191,19 @@ export function parseWikiMap(text: string) {
          let p = parents[parents.length - 1];
          if (p.level + 1 == level) {
             node.parentId = p.id;
+            node.showing = !p.collapsed && p.showing;
          } else if (p.level + 1 < level) {
             parents.push(all[all.length - 1]);
             p = parents[parents.length - 1];
             node.parentId = p.id;
+            node.showing = !p.collapsed && p.showing;
          } else {
             while (p.level + 1 > level) {
                p = parents.pop()!;
             }
             parents.push(p);
             node.parentId = p.id;
+            node.showing = !p.collapsed && p.showing;
          }
          all.push(node);
          kids.get(p.id)!.push(node.id);
@@ -308,7 +317,9 @@ export function newMapNode(level: number, label: string, id: number, L2: number)
       x: 0,
       y: 0,
       widthFull: 0,
-      L2: L2
+      L2: L2,
+      collapsed: false,
+      showing: true
    }
 }
 
