@@ -55,16 +55,15 @@ static void saveMD(const char *text, unsigned int size, void *userdata) {
    bytearray_append_all(ctx->responseBody, text, size);
 }
 
-static bool markdownGet(HttpContext ctx, void *arg) {
-   char *filename = normalizedPath(dataRoot, get_req(ctx, H_LOCALPATH), "md");
-   Bytearray input = bytearray_readfile(filename);
+static bool markdownToHtml(HttpContext ctx, void *arg) {
+   Bytearray input = ctx->requestBody;
    if (input) md_html(input->bytes, input->size, saveMD, ctx, PARSER_FLAGS, RENDER_FLAGS);
    http_response_headers(ctx, 200, false, "text/html");
    http_send(ctx);
    return true;
 }
 
-static bool markdownGetRaw(HttpContext ctx, void *arg) {
+static bool wikiGet(HttpContext ctx, void *arg) {
    char *filename = normalizedPath(dataRoot,  get_req(ctx, H_LOCALPATH), "md");
    Bytearray input = bytearray_readfile(filename);
    if (input) bytearray_append_all(ctx->responseBody, input->bytes, input->size);
@@ -73,7 +72,7 @@ static bool markdownGetRaw(HttpContext ctx, void *arg) {
    return true;
 }
 
-static bool markdownSave(HttpContext ctx, void *arg) {
+static bool wikiSave(HttpContext ctx, void *arg) {
    char *filename = normalizedPath(dataRoot,  get_req(ctx, H_LOCALPATH), "md");
    bytearray_writefile(ctx->requestBody, filename);
    http_response_headers(ctx, 200, false, "text/plain");
@@ -149,9 +148,9 @@ int main(int argc, char **argv) {
          testAll();
       } else {
          log_info("running on port %d, src={%s}, data={%s}, mode={%d}, localhost={%s}, ext={%s}", port, srcRoot, dataRoot, debugMode, localhost, externalFolders);
-         web_handler("markdownGet", "GET", "/-/md-to-html/", markdownGet, NULL);
-         web_handler("markdown_raw", "GET", "/-/md/", markdownGetRaw, NULL);
-         web_handler("markdown_save", "POST", "/-/md/", markdownSave, NULL);
+         web_handler("md_to_html", "POST", "/-/md-to-html/", markdownToHtml, NULL);
+         web_handler("wiki_get", "GET", "/-/md/", wikiGet, NULL);
+         web_handler("wiki_save", "POST", "/-/md/", wikiSave, NULL);
          files_addDir("src_cached", "GET", "/-/src/prod/", hPath(srcRoot, "prod"), true);
          files_addDir("src_uncached", "GET", "/-/src/", srcRoot, false);
          addExternalFolders(externalFolders);

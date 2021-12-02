@@ -105,7 +105,7 @@ const keymap:{ [id:number]:string[] } = {
 
 };
 
-export function getKey(e:React.KeyboardEvent<any>) {
+export function getKey(e:React.KeyboardEvent<any>|KeyboardEvent) {
    let key:string = '';
    if (e.key && e.key !== 'Unidentified') {
       key = e.key;

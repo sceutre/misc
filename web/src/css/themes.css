@@ -1,5 +1,6 @@
 :root {
    --sidebar-bg:             hsl(38, 20%, 70%);
+   --sidebar-hover-bg:       hsl(38, 20%, 65%);
    
    --sidebar-btn-bg:         hsl(38, 20%, 76%);
    --sidebar-btn-border:     transparent;
@@ -9,6 +10,7 @@
    --main-bg:                hsl(38, 39%, 95%);
 
    --main-fg:                hsl(38, 39%, 9%);
+   --main-fg-t:              hsl(38, 39%, 9%, 0%);
    --main-blockquote-fg:     hsl(38, 39%, 9%);
 
    --main-link:              hsl(212, 97%, 43%);
@@ -36,6 +38,7 @@
 }
 .dark {
    --sidebar-bg:             hsl(38, 20%, 30%);
+   --sidebar-hover-bg:       hsl(38, 20%, 35%);
    
    --sidebar-btn-bg:         hsl(38, 20%, 24%);
    --sidebar-btn-border:     transparent;
@@ -45,6 +48,7 @@
    --main-bg:                hsl(38, 39%, 5%);
 
    --main-fg:                hsl(38, 20%, 70%);
+   --main-fg-t:              hsl(38, 20%, 70%, 0%);
    --main-blockquote-fg:     hsl(38, 20%, 70%);
 
    --main-link:              hsl(212, 50%, 70%);

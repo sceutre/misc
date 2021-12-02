@@ -7,13 +7,6 @@
    outline: none;
 }
 
-.overall {
-   height: 100%;
-   display: flex;
-   flex-flow: row nowrap;
-   background: var(--main-bg);
-}
-
 #react {
    position: absolute;
    top: 0;
@@ -22,28 +15,77 @@
    right: 0;
 }
 
+.app {
+   height: 100%;
+   display: flex;
+   flex-flow: row nowrap;
+   background: var(--main-bg);
+}
+
 .main {
-   flex-basis: 75%;
-   max-width: 75%;
+   flex: 1 1 100%;
    overflow:auto;
    padding: 20px 20px 0 20px;
    background: var(--main-bg);
 }
 
-.fullscreen {
-   flex-basis: 100%;
-   max-width: 100%;
-}
-
 .sidebar {
-   flex-basis: 25%;
-   max-width: 25%;
+   flex: 0 0 200px;
    display: flex;
    flex-flow: column nowrap;
    background: var(--sidebar-bg);
+   transition: flex-basis 300ms;
+   overflow: hidden;
+   z-index: 10;
 }
 
-.main-content {
+.sidebar.compact {
+   flex: 0 0 55px;
+}
+
+.sidebar .iconarrow {
+   position: fixed;
+   bottom: 10px;
+   left: 188px;
+   transform: rotate(180deg);
+   transition: left 300ms, transform 100ms linear;
+}
+
+.sidebar.compact .iconarrow {
+   left: 43px;
+   transform: rotate(0deg);
+}
+
+.sidebar .iconarrow:hover {
+   cursor: pointer;
+   --sidebar-bg: var(--sidebar-hover-bg);
+}
+
+.sidebar .iconlabel {
+   margin-left: 5px;
+   padding: 6px;
+   cursor: pointer;
+   height: 24px;
+   width: 180px;
+}
+
+.sidebar .iconlabel:hover {
+   background: var(--sidebar-btn-bg)
+}
+
+.sidebar .iconlabel img {
+   width: 24px;
+   height: 24px;
+}
+
+.sidebar .iconlabel span {
+   line-height: 24px;
+   vertical-align: text-bottom;
+   margin-left: 5px;
+}
+
+
+.markdown-display {
    padding-bottom: 20px;
 }
 
@@ -105,11 +147,11 @@
    cursor: pointer;
 }
 
-.main-edit {
+.edit {
    height: calc(100% - 80px);
 }
 
-.main-edit textarea {
+.edit textarea {
    width: calc(100% - 15px);
    height: calc(100% - 15px);
    background: var(--main-pre-bg);
@@ -123,7 +165,7 @@
    color: var(--main-fg);
 }
 
-.main-edit textarea:focus {
+.edit textarea:focus {
    border: 1px solid var(--main-pre-border);
 }
 
@@ -138,10 +180,10 @@
 .sidebar::-webkit-scrollbar-thumb:hover { background: var(--sidebar-scrollbar-hover); }
 .sidebar { scrollbar-color: var(--sidebar-scrollbar-thumb) var(--sidebar-scrollbar-track); }
 
-.main-edit textarea::-webkit-scrollbar-track { background: var(--main-pre-scrollbar-thumb);  }
-.main-edit textarea::-webkit-scrollbar-thumb { background: var(--main-pre-scrollbar-track); }
-.main-edit textarea::-webkit-scrollbar-thumb:hover { background: var(--main-pre-scrollbar-hover); }
-.main-edit textarea { scrollbar-color: var(--main-pre-scrollbar-thumb) var(--main-pre-scrollbar-track); }
+.edit textarea::-webkit-scrollbar-track { background: var(--main-pre-scrollbar-thumb);  }
+.edit textarea::-webkit-scrollbar-thumb { background: var(--main-pre-scrollbar-track); }
+.edit textarea::-webkit-scrollbar-thumb:hover { background: var(--main-pre-scrollbar-hover); }
+.edit textarea { scrollbar-color: var(--main-pre-scrollbar-thumb) var(--main-pre-scrollbar-track); }
 
 .mapnode {
    display: inline-block;
@@ -174,9 +216,9 @@
 }
 
 @keyframes cursor-blink { 
-   0% { background-color: var(--mmap-edit-bg); }
+   0% { background-color: var(--main-fg-t); }
    50% { background-color: var(--main-fg); }
-   100% { background-color: var(--mmap-edit-bg); }
+   100% { background-color: var(--main-fg-t); }
  }
 
  .cursor {
@@ -184,6 +226,7 @@
     width: 1px;
     animation: cursor-blink steps(1) 800ms infinite;
     display: inline-block;
+    margin-left: -1px;
  }
 
  .cursor:before {

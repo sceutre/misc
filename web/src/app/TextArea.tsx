@@ -1,8 +1,8 @@
-import {domainToUnicode} from "url";
+import {Action} from "../utils/flux";
 
 interface TextAreaProps {
-   onChange: Fn;
-   onSave: Fn;
+   onChange: Action<{text:string}>;
+   onSave?: Action<void>;
    value: string;
 } 
 
@@ -76,7 +76,7 @@ export function TextArea(props:TextAreaProps) {
    const history = React.useRef<History>({ states: [{text: props.value, beforeStart:0, beforeEnd: 0, afterStart: 0, afterEnd: 0}], ix: 0, sel1:0, sel2:0});
    
    function applyEdits(text:string, selectionStart:number, selectionEnd:number, type:ApplyType) {
-      props.onChange(text);
+      props.onChange({text});
       if (type != "default" && textArea.current) {
         textArea.current.value = text;
         textArea.current.selectionStart = selectionStart;
@@ -185,7 +185,7 @@ export function TextArea(props:TextAreaProps) {
 
    function doSave(e:React.KeyboardEvent<HTMLTextAreaElement>) {
       e.preventDefault();
-      props.onSave(null);
+      props.onSave?.();
    }
 
    function onChange(e:any) {
