@@ -61,7 +61,8 @@
    --sidebar-bg: var(--sidebar-hover-bg);
 }
 
-.sidebar .iconlabel {
+.sidebar .iconlabel,
+.sidebar .iconlabelnoaction {
    margin-left: 5px;
    padding: 6px;
    cursor: pointer;
@@ -69,16 +70,22 @@
    width: 180px;
 }
 
+.sidebar .iconlabelnoaction {
+   cursor: default;
+}
+
 .sidebar .iconlabel:hover {
    background: var(--sidebar-btn-bg)
 }
 
-.sidebar .iconlabel img {
+.sidebar .iconlabel img,
+.sidebar .iconlabelnoaction img {
    width: 24px;
    height: 24px;
 }
 
-.sidebar .iconlabel span {
+.sidebar .iconlabel span,
+.sidebar .iconlabelnoaction span {
    line-height: 24px;
    vertical-align: text-bottom;
    margin-left: 5px;
@@ -148,12 +155,12 @@
 }
 
 .edit {
-   height: calc(100% - 80px);
+   height: calc(100% - 28px);
 }
 
 .edit textarea {
    width: calc(100% - 15px);
-   height: calc(100% - 15px);
+   height: calc(100% - 95px);
    background: var(--main-pre-bg);
    border: 1px solid var(--main-pre-border);
    font-family: 'IBM Plex Mono', SFMono-Regular, Consolas, Liberation Mono, Menlo, Courier, monospace;

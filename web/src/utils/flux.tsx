@@ -41,15 +41,15 @@ class ActionClass<T = {}> {
       if (!fnId.id) fnId.id = ActionClass.ID++;
       this.listeners.push(fnId);
       return fnId.id;
-   }
+   };
 
    remove = (id: number) => {
       this.listeners = this.listeners.filter(x => x.id != id);
-   }
+   };
 
    fire = (data?: T) => {
       dispatcher.dispatchAction(this as any, data);
-   }
+   };
 }
 
 class Dispatcher {
@@ -108,7 +108,7 @@ class Dispatcher {
       return promise;
    }
 
-   installActionLogging(logger: (action: string, data: string) => void) {
+   installActionLogging(logger: (action: string, data: any) => void) {
       this.logger = logger;
    }
 
@@ -202,7 +202,7 @@ export class StoreCollection<T> {
    private stores: { [k:string]:Store<T>};
    private defaultValues: T;
 
-   constructor(defaultValues: T, prefix: string) {
+   constructor(prefix: string, defaultValues: T) {
       this.prefix = prefix;
       this.stores = {};
       this.defaultValues = defaultValues;

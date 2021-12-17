@@ -70,6 +70,9 @@ export const actionDirty = Action("becomeDirty", () => {
 
 function isDarkTheme() {
    let theme = localStorage.getItem("theme");
+   if (theme == null) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+   }
    return theme === "dark";
 }
 
@@ -93,7 +96,7 @@ export function appBeginDownloader() {
       resp = await fetch("/-/md/sidebar");
       if (resp.ok) {
          let text = await resp.text();
-         let obj = toObject(text);
+         let obj = JSON.parse(text);
          actionSetSidebar({sidebar: obj});
       }
    }
@@ -105,7 +108,7 @@ function appSaveImpl(payload:any, type:Content) {
    log$(save());
 
    async function save() {
-      let data = encrypt(payload, type);
+      let data = encode(payload, type);
       AppStore.set("netStatus", "net-waiting");
       let resp = await fetch("-/md/" + path(), { method: "POST", body: data });
       if (resp.ok) {
@@ -118,6 +121,7 @@ function appSaveImpl(payload:any, type:Content) {
 }
 
 function toObject(text:string):Downloaded {
+   if (path() == "Sidebar") return { data: text, type: "sidebar" };
    if (text.startsWith("{")) return JSON.parse(text);
    return { data: text, type: "markdown"};
 }
@@ -126,11 +130,14 @@ function decrypt(cipherText:string, password:string):Downloaded {
    return { data: "", type: "unknown" };   
 }
 
-function encrypt(payload:any, type:Content) {
+function encode(payload:any, type:Content) {
+   if (path() == "Sidebar" || type == "markdown" && !payload.startsWith("{") && !AppStore.data.password) {
+      // sidebar is special case, and for plaintext markdown leave it as raw markdown so it's easier to view outside of wiki
+      return payload;
+   }
    let d:Downloaded = { data: payload, type };
    let encoded = JSON.stringify(d);
    if (AppStore.data.password) {
-      
    }
    return encoded;
 }

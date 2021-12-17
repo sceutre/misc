@@ -1,5 +1,4 @@
 import {Action, Store} from "../../utils/flux";
-import {stableStringify} from "../../utils/stringify";
 import {actionSetSidebar, actionUpdateDownloaded, appSave, AppStore} from "./AppBacking";
 
 export interface Icon {
@@ -29,9 +28,8 @@ export const SidebarStore = new Store("SidebarStore", {
 export const actionSidebarTextChanged = Action("setSidebarEditingText", (arg:{text:string}) => {
    SidebarStore.set("text", arg.text);
    try {
-      let obj = JSON.parse(arg.text);
       AppStore.set("netStatus", "net-dirty");
-      appSave(obj, "sidebar");
+      appSave(arg.text, "sidebar");
    } catch (e) {
       console.warn(e);
    }
@@ -43,9 +41,8 @@ actionSetSidebar.add((arg:{sidebar:SidebarData}) => {
 
 actionUpdateDownloaded.add((arg) => {
    if (AppStore.data.content == "sidebar") {
-      SidebarStore.set("sidebar", AppStore.data.payload);
-      if (stableStringify(JSON.parse(SidebarStore.data.text) != stableStringify(AppStore.data.payload)))
-         SidebarStore.set("text", JSON.stringify(AppStore.data.payload, null, 3));
+      if (SidebarStore.data.text != AppStore.data.payload)
+         SidebarStore.set("text", AppStore.data.payload);
    }
 });
 

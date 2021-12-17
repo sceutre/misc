@@ -30,6 +30,7 @@ const MarkdownDisplay = () => {
 const MarkdownEdit = () => {
    let {text} = useStore(MarkdownStore, ["text"])
    return (<div className="main edit markdown-edit">
+      <div className="main-title">{path()}</div>
       <TextArea onChange={actionTextChanged} value={text} onSave={actionTextEditingDone}/>
    </div>);
 };

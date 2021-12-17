@@ -1,4 +1,5 @@
 import {useStore} from "../utils/flux";
+import {path} from "../utils/utils";
 import {actionToggleDark, AppStore, Content, Theme} from "./backing/AppBacking";
 import {actionTextEditingDone, actionTextEditingStart, MarkdownStore} from "./backing/MarkdownBacking";
 import {actionSetCompactMode, actionSidebarTextChanged, Icon, isHtmlChunk, SidebarStore} from "./backing/SidebarBacking";
@@ -7,23 +8,21 @@ import {TextArea} from "./TextArea";
 
 export function Sidebar() {
    let {sidebar, compactMode} = useStore(SidebarStore, ["sidebar", "compactMode"]);
-   let {theme, content} = useStore(AppStore, ["theme", "content"]);
+   let {theme, content, netStatus} = useStore(AppStore, ["theme", "content", "netStatus"]);
    let {isEditing} = useStore(MarkdownStore, ["isEditing"]);
    let whens:string[] = [];
+   if (netStatus != "net-clean") whens.push("dirty");
    if (isEditing) whens.push("editing");
    if (!isEditing && content == "markdown") whens.push("editable");
    whens.push(theme);
    whens.push(compactMode ? "compact" : "normal");
    return <div className={compactMode ? "sidebar compact" : "sidebar"}>
       {sidebar?.items.map(x => {
-         if (!isWhen(whens, x.when)) return null;
-         if (isHtmlChunk(x)) {
-            return <div style={x.wrapperStyle} dangerouslySetInnerHTML={{__html: x.html}}></div>
-         } else if (shouldShow(theme, content, isEditing,x)) {
-            return <IconLabel icon={x} compact={compactMode} />
-         } else {
+         if (!isWhen(whens, x.when)) 
             return null;
-         }
+         if (isHtmlChunk(x))
+            return <div style={x.wrapperStyle} dangerouslySetInnerHTML={{__html: x.html}}></div>
+         return <IconLabel icon={x} compact={compactMode} />
       })}
       <IconArrow/>
    </div>;
@@ -31,7 +30,8 @@ export function Sidebar() {
 
 export function SidebarEdit() {
    let {text} = useStore(SidebarStore, ["text"])
-   return (<div className="mardown-edit">
+   return (<div className="main edit">
+      <div className="main-title">{path()}</div>
       <TextArea onChange={actionSidebarTextChanged} value={text}/>
    </div>);
 }
@@ -39,7 +39,7 @@ export function SidebarEdit() {
 function IconLabel(props:{icon:Icon, compact:boolean}) {
    const {opacity = 1, label, action, image} = props.icon;
 
-   return <div className="iconlabel" onClick={onClick} style={{opacity: opacity}}>
+   return <div className={action =="$none" ? "iconlabelnoaction" : "iconlabel"} onClick={onClick} style={{opacity: opacity}}>
       <img src={image}/>{!props.compact && <span>{label}</span>}
    </div>;
 
@@ -55,6 +55,8 @@ function IconLabel(props:{icon:Icon, compact:boolean}) {
             case "$toDark":
             case "$toLight":
                actionToggleDark();
+               break;
+            case "$none":
                break;
             default: 
                window.location.href = action; 
@@ -85,22 +87,6 @@ function toggleCompactMode() {
    actionSetCompactMode({compact: !SidebarStore.data.compactMode})
 }
 
-function shouldShow(theme: Theme, content: Content, isEditing:boolean, icon: Icon) {
-   if (icon.action) {
-      switch (icon.action) {
-         case "$edit":
-            return content == "markdown" && !isEditing;
-         case "$editDone":
-            return content == "markdown" && isEditing;
-         case "$toDark":
-            return theme == "light";
-         case "$toLight":
-            return theme == "dark";
-      }
-   }
-   return true;
-}
-
 function isWhen(whens: string[], when: string[] | undefined) {
    if (when) {
       for (let x of when) {
@@ -109,4 +95,3 @@ function isWhen(whens: string[], when: string[] | undefined) {
    }
    return true;
 }
-

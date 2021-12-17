@@ -71,7 +71,8 @@ webwatch: $(CSS) $(ASSETS)
 
 $(JS): $(shell find web/src -name *.ts* -type f)
 	@cd web && ./node_modules/.bin/tsc
-	@cd .  && web/node_modules/.bin/rollup $(BIN_DIR)/srcroot/dev/main.js --silent  -o $(BIN_DIR)/srcroot/prod/bundle.js -f esm
+	@printf "  \xE2\x9c\x93 tsc\n"
+	@cd .  && web/node_modules/.bin/esbuild $(BIN_DIR)/srcroot/dev/main.js --bundle --log-level=warning --outfile=$(BIN_DIR)/srcroot/prod/bundle.js
 	@printf "  \xE2\x9c\x93 $@\n"
 
 $(CSS): $(shell find web/src -name *.css -type f)
