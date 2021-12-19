@@ -11,7 +11,7 @@ export const Markdown = () => {
 const MarkdownDisplay = () => {
    let {html} = useStore(MarkdownStore, ["html"])
    return (<div className="main markdown-display">
-      <div className="main-title">{path()}</div>
+      <div className="main-title">{path().replace("_", " ")}</div>
       <div className="markdown-body" dangerouslySetInnerHTML={{__html: html}} onClick={onClick}></div>
    </div>);
 

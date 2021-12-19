@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@excalidraw/excalidraw@^0.10.0":
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/@excalidraw/excalidraw/-/excalidraw-0.10.0.tgz#5329d6fb1b0cca068e2cd34da6d648dd6d0d3fec"
+  integrity sha512-0fHc/oX394dHAT7LEacwZ0vh8aeI179plYnfaeLeRHBtHARgmtlmvxcnxd2pxJ0Z1Uj/Cy76oK9MVw/y8P1HhQ==
+
 "@types/prop-types@*":
   version "15.5.9"
   resolved "https://registry.npmjs.org/@types/prop-types/-/prop-types-15.5.9.tgz"
