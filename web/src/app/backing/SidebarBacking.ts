@@ -1,5 +1,5 @@
-import {Action, Store} from "../../utils/flux";
-import {actionSetSidebar, actionUpdateDownloaded, appSave, AppStore} from "./AppBacking";
+import {Action, Store} from "../../utils/flux.js";
+import {actionSetSidebar, actionUpdateDownloaded, appSave, AppStore} from "./AppBacking.js";
 
 export interface Icon {
    label:string;

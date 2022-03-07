@@ -1,9 +1,9 @@
-import {useStore} from "../utils/flux";
-import {path} from "../utils/utils";
-import {actionToggleDark, AppStore, Content, Theme} from "./backing/AppBacking";
-import {actionTextEditingDone, actionTextEditingStart, MarkdownStore} from "./backing/MarkdownBacking";
-import {actionSetCompactMode, actionSidebarTextChanged, Icon, isHtmlChunk, SidebarStore} from "./backing/SidebarBacking";
-import {TextArea} from "./TextArea";
+import {useStore} from "../utils/flux.js";
+import {path} from "../utils/utils.js";
+import {actionToggleDark, AppStore, Content, Theme} from "./backing/AppBacking.js";
+import {actionTextEditingDone, actionTextEditingStart, MarkdownStore} from "./backing/MarkdownBacking.js";
+import {actionSetCompactMode, actionSidebarTextChanged, Icon, isHtmlChunk, SidebarStore} from "./backing/SidebarBacking.js";
+import {TextArea} from "./TextArea.js";
 
 
 export function Sidebar() {

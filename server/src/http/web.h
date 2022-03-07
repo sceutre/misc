@@ -18,7 +18,7 @@ typedef struct WebHandlerStruct {
 } *WebHandler;
 
 void web_handler(char *name, char *methodPattern, char *urlPattern, WebCallback callback, void *arg);
-void web_start(int port);
+void web_start(int port, bool blockUntilDone);
 void web_stop();
 void web_setMaxConcurrent(int maxConcurrent);
 void web_setNumWorkers(int numWorkers);

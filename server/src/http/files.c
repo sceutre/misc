@@ -7,6 +7,7 @@
 #include "../utils/bytearray.h"
 #include "../utils/concurrency.h"
 #include "../utils/log.h"
+#include "../utils/win.h"
 
 #define CHUNK_SIZE 4096
 
@@ -19,7 +20,7 @@ typedef struct FileInfoStruct {
 static bool doFile(HttpContext ctx, char *dir, char *file, int status, bool cache) {
    bytearray_reset(ctx->responseBody);
    char *filename = dir ? t_printf("%s/%s", dir, file) : t_printf("%s", file);
-   replaceChar(filename, '/', '\\');
+   replaceChar(filename, '/', win_fileSeperator());
    maskString(filename, "..", 'x');
 
    FILE *fp = fopen(filename, "rb");

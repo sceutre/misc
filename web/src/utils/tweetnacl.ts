@@ -1,4 +1,4 @@
-import {Blake2B, blake2b_final, blake2b_init, blake2b_update} from "./blake2b";
+import {Blake2B, blake2b_final, blake2b_init, blake2b_update} from "./blake2b.js";
 
 const enum AuthLength {
     Auth = 32,

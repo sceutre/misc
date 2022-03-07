@@ -16,7 +16,7 @@ static struct {
    Mutex mutex;
    Signal signal;
    List handlers;
-} this = {0, 5, 100, NULL, NULL, NULL, NULL};
+} this = {0, 10, 100, NULL, NULL, NULL, NULL};
 
 static void listenLoop();
 static void workerLoop();
@@ -48,13 +48,14 @@ void web_stop() {
    // TODO implement
 }
 
-void web_start(int port) {
+void web_start(int port, bool blockUntilDone) {
    this.port = port;
    this.queue = queue_new(this.maxConcurrent);
    this.mutex = mutex_new();
    this.signal = signal_new();
    for (int i = 0; i < this.numWorkers; i++) t_start(workerLoop);
-   t_start(listenLoop);
+   if (blockUntilDone) listenLoop();
+   else t_start(listenLoop);
 }
 
 static void listenLoop() {

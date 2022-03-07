@@ -1,4 +1,4 @@
-import {Action} from "../utils/flux";
+import {Action} from "../utils/flux.js";
 
 interface TextAreaProps {
    onChange: Action<{text:string}>;

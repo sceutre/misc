@@ -2,26 +2,34 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
+#include <pthread.h>
 #include "../win.h"
 #include "../concurrency.h"
 
 
-void win_pushMenuItem(char *name, MenuFn callback) {
+bool win_hasRunLoop() {
+   return false;
 }
 
-void win_exit() {
-   exit(1);
+void win_pushMenuItem(char *name, MenuFn callback) {
 }
 
 void win_run(char *ico, char *tooltip) {
 }
 
 void win_openBrowser(char *host, int port, char *uri, bool https) {
- //  ShellExecute(NULL, NULL, t_printf("http%s://%s:%d/%s", https ? "s" : "", host, port, uri), NULL, NULL, SW_SHOW);
+}
+
+void win_exit() {
 }
 
 char *win_getExeFolder() {
    return ".";
+}
+
+char win_fileSeperator() { 
+   return '/'; 
 }
 
 // on linux first char is the deliminator for the rest

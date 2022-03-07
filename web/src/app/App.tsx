@@ -1,11 +1,11 @@
-import {useStore} from "../utils/flux";
-import {AppStore, Mode, NetStatus, Theme} from "./backing/AppBacking";
-import {Chooser} from "./Chooser";
-import {Drawing} from "./Drawing";
-import {Locked} from "./Locked";
-import {Markdown} from "./Markdown";
-import {MindMap} from "./MindMap";
-import {Sidebar, SidebarEdit} from "./Sidebar";
+import {useStore} from "../utils/flux.js";
+import {AppStore, Mode, NetStatus, Theme} from "./backing/AppBacking.js";
+import {Chooser} from "./Chooser.js";
+import {Drawing} from "./Drawing.js";
+import {Locked} from "./Locked.js";
+import {Markdown} from "./Markdown.js";
+import {MindMap} from "./MindMap.js";
+import {Sidebar, SidebarEdit} from "./Sidebar.js";
 
 interface PropsDerived {
    mode:Mode,

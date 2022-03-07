@@ -50,7 +50,7 @@ static void testMap() {
 static void testList() {
    List list = list_new_ex(16, list_freeDirectFn);
    for (int i = 0; i < 100; i++) {
-      list_push(list, (i%2 == 0 ? "some string" : "odd"));
+      list_push(list, strdup(i%2 == 0 ? "some string" : "odd"));
    }
    log_info("%d: %s", 50, list_get(list, 50));
    log_info("%d: %s", 51, list_get(list, 51));
@@ -68,9 +68,42 @@ static void testBytearray() {
    bytearray_free(array);
 }
 
+
+Signal sigA;
+Mutex mutexA;
+int runningThreads;
+
+void fn() {
+   log_info("hello from thread %d", t_threadId());
+   mutex_lockRW(mutexA);
+   runningThreads--;
+   mutex_unlockRW(mutexA);
+   signal_fire(sigA);
+}
+
+static void testThreads() {
+   sigA = signal_new();
+   mutexA = mutex_new();
+   runningThreads = 2;
+
+   t_start(fn);
+   t_start(fn);
+
+   bool isDone = false;
+   while (!isDone) {
+      signal_wait(sigA);
+      mutex_lockR(mutexA);
+      isDone = runningThreads == 0;
+      mutex_unlockR(mutexA);
+   }
+
+   log_info("goodbye from main");
+}
+
 void testAll() {
-   testExceptions();
-   testMap();
-   testList();
-   testBytearray();
+   log_info("** testExceptions"); testExceptions();
+   log_info("** testMap"); testMap();
+   log_info("** testList"); testList();
+   log_info("** testThreads"); testThreads();
+   log_info("** testBytearray"); testBytearray();
 }

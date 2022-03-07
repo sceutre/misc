@@ -10,4 +10,6 @@ void win_openBrowser(char *host, int port, char *uri, bool https);
 char *win_getExeFolder();
 int win_getEnvOpts(char *varName, char **dest, int size);
 void win_getLocalTime(int *hours, int *mins, int *seconds, int *millis);
+char win_fileSeperator();
+bool win_hasRunLoop();
 #endif

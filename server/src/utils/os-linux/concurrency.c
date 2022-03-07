@@ -1,17 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdarg.h>
+#include <pthread.h>
+#include <semaphore.h>
+
 #include "../log.h"
 #include "../list.h"
 #include "../concurrency.h"
 
 struct Mutex_s {
+   pthread_rwlock_t plock;         
 };
 
 struct Signal_s {
+   sem_t semaphore;
 };
 
 struct Thread_s {
+   pthread_t pthread;
+   int id;
 };
 
 struct PerThread_s {
@@ -25,15 +33,11 @@ struct PerThread_s {
 struct PerThread_s locals[MAX_THREADS];
 Mutex threadStartMutex = NULL;
 
-static int indexOfLocal(unsigned int id);
-static unsigned int __stdcall threadStarter(void *func);
-static LocalStorage initThread(unsigned int threadId);
-
-// TODO - implement
-#define GET_THREAD_ID 0
+static int indexOfLocal();
+static LocalStorage initThread();
 
 LocalStorage t_local() {
-   int i = indexOfLocal(GET_THREAD_ID);
+   int i = indexOfLocal();
    return &(locals[i].storage);
 }
 
@@ -62,63 +66,85 @@ void t_reset() {
 void t_init() {
    threadStartMutex = mutex_new();
    for (int i = 0; i < MAX_THREADS; i++) locals[i].storage.thread = NULL;
-   initThread(GET_THREAD_ID);
+   initThread(pthread_self());
 }
 
 Mutex mutex_new() {
    Mutex m = malloc(sizeof(*m));
-   // TODO implement
+   pthread_rwlock_init(&(m->plock), NULL);
    return m;
 }
 
 void _mutexAcquire(Mutex m, bool readOnly) {
-   // TODO implement
+   if (readOnly) {
+      pthread_rwlock_rdlock(&(m->plock));        
+   } else {
+      pthread_rwlock_wrlock(&(m->plock));              
+   }
 }
 
 void _mutexRelease(Mutex m, bool readOnly) {
-   // TODO implement
+   pthread_rwlock_unlock(&(m->plock));
 }
 
 Signal signal_new() {
    Signal s = malloc(sizeof(*s));
-   // TODO implement
+   sem_init(&(s->semaphore), 0, 1);
    return s;
 }
 
 void signal_wait(Signal s) {
-   // TODO implement
+   sem_wait(&(s->semaphore));
 }
 
 void signal_fire(Signal s) {
-   // TODO implement
+   sem_post(&(s->semaphore));
+}
+
+void *_t_start(void *fn) {
+   ((CallbackFn)fn)();
+   return NULL;
 }
 
 int t_start(CallbackFn func) {
    mutex_lockRW(threadStartMutex);
-   // TODO implement
+   pthread_t threadId;
+   pthread_create(&threadId, NULL, _t_start, func);
+   LocalStorage s = initThread(threadId);
    mutex_unlockRW(threadStartMutex);
    return 0;
 }
 
-static LocalStorage initThread(unsigned int threadId) {
-   // TODO implement
+static LocalStorage initThread(pthread_t id) {
+   for (int i = 0; i < MAX_THREADS; i++) {
+      if (locals[i].storage.thread == NULL) {
+         Thread t = malloc(sizeof(*t));
+         locals[i].storage.thread = t;
+         locals[i].storage.buffer = calloc(THREAD_BUFFER_SIZE, 1);
+         locals[i].storage.thread->pthread = id;
+         locals[i].storage.thread->id = i;
+         locals[i].jumpBuffers = list_new();
+         return &(locals[i].storage);
+      }
+   }
    return NULL;
 }
 
 bool t_wait(int i, int millis) {
-   // TODO implement
-   return true;
+  return true;
 }
 
-static int indexOfLocal(unsigned int id) {
-   // TODO implement
+static int indexOfLocal() {
+   pthread_t myThread = pthread_self();
+   for (int i = 0; i < MAX_THREADS && locals[i].storage.thread != NULL; i++)
+      if (pthread_equal(myThread, locals[i].storage.thread->pthread)) return i;
    return -1;
 }
 
 jmp_buf *_threadLocalJumpBuf(bool push, bool pop) {
    jmp_buf *p;
 
-   List list = locals[indexOfLocal(GET_THREAD_ID)].jumpBuffers;
+   List list = locals[indexOfLocal()].jumpBuffers;
    if (push) {
       p = malloc(sizeof(*p));
       list_push(list, p);
@@ -131,5 +157,5 @@ jmp_buf *_threadLocalJumpBuf(bool push, bool pop) {
 }
 
 int t_threadId() {
-   return indexOfLocal(GET_THREAD_ID);
+   return indexOfLocal();
 }

@@ -159,10 +159,14 @@ void map_parseCLI(Map options, char **argv, int argc) {
       if (*(p++) == '-' && *(p++) == '-') {
          char *val = map_get(options, p);
          if (val != NULL) {
-            i++;
-            if (i < argc) {
-               map_put(options, p, argv[i]);
-               continue;
+            if (strcmp(p, "help") == 0) {
+               map_put(options, p, "true");
+            } else {
+               i++;
+               if (i < argc) {
+                  map_put(options, p, argv[i]);
+                  continue;
+               }
             }
          }
       }

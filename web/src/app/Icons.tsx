@@ -1,5 +1,5 @@
-import {useStore} from "../utils/flux";
-import {SidebarStore} from "./backing/SidebarBacking";
+import {useStore} from "../utils/flux.js";
+import {SidebarStore} from "./backing/SidebarBacking.js";
 
 const FULL_WIDTH = 200;
 const COMPACT_WIDTH = 80;

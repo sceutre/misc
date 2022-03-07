@@ -126,6 +126,10 @@ void win_run(char *ico, char *tooltip) {
    }
 }
 
+bool win_hasRunLoop() {
+   return true;
+}
+
 void win_openBrowser(char *host, int port, char *uri, bool https) {
    ShellExecute(NULL, NULL, t_printf("http%s://%s:%d/%s", https ? "s" : "", host, port, uri), NULL, NULL, SW_SHOW);
 }
@@ -138,6 +142,10 @@ char *win_getExeFolder() {
       if (*p == '/' || *p == '\\') last = p;
    if (last) *last = 0;
    return buf;
+}
+
+char win_fileSeperator() { 
+   return '\\'; 
 }
 
 int win_getEnvOpts(char *envStr, char **dest, int size) {

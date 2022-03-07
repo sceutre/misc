@@ -31,12 +31,12 @@ struct PerThread_s {
 struct PerThread_s locals[MAX_THREADS];
 Mutex threadStartMutex = NULL;
 
-static int indexOfLocal(unsigned int id);
+static int indexOfLocal();
 static unsigned int __stdcall threadStarter(void *func);
 static LocalStorage initThread(unsigned int threadId);
 
 LocalStorage t_local() {
-   int i = indexOfLocal(GetCurrentThreadId());
+   int i = indexOfLocal();
    return &(locals[i].storage);
 }
 
@@ -138,7 +138,8 @@ bool t_wait(int i, int millis) {
    return false;
 }
 
-static int indexOfLocal(unsigned int id) {
+static int indexOfLocal() {
+   unsigned int id = GetCurrentThreadId();
    for (int i = 0; i < MAX_THREADS && locals[i].storage.thread != NULL; i++)
       if (locals[i].storage.thread->osId == id) return i;
    return -1;
@@ -155,7 +156,7 @@ static unsigned int __stdcall threadStarter(void *func) {
 jmp_buf *_threadLocalJumpBuf(bool push, bool pop) {
    jmp_buf *p;
 
-   List list = locals[indexOfLocal(GetCurrentThreadId())].jumpBuffers;
+   List list = locals[indexOfLocal()].jumpBuffers;
    if (push) {
       p = malloc(sizeof(*p));
       list_push(list, p);
@@ -168,5 +169,5 @@ jmp_buf *_threadLocalJumpBuf(bool push, bool pop) {
 }
 
 int t_threadId() {
-   return indexOfLocal(GetCurrentThreadId());
+   return indexOfLocal();
 }

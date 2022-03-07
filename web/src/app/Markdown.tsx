@@ -1,7 +1,7 @@
-import {useStore} from "../utils/flux";
-import {path} from "../utils/utils";
-import {actionTextChanged, actionTextEditingDone, actionToggleContentCheckbox, MarkdownStore} from "./backing/MarkdownBacking";
-import {TextArea} from "./TextArea";
+import {useStore} from "../utils/flux.js";
+import {path} from "../utils/utils.js";
+import {actionTextChanged, actionTextEditingDone, actionToggleContentCheckbox, MarkdownStore} from "./backing/MarkdownBacking.js";
+import {TextArea} from "./TextArea.js";
 
 export const Markdown = () => {
    let {isEditing} = useStore(MarkdownStore, ["isEditing"]);

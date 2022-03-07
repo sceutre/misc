@@ -275,7 +275,7 @@ void http_response_headers(HttpContext ctx, int status, bool cache, char *mime) 
 
 void autoclose(HttpContext ctx) {
    char *header = get_req(ctx, H_CONNECTION);
-   if (header && containsIgnoreCase(header, "close")) {
+   if (true || (header && containsIgnoreCase(header, "close"))) {
       ctx->closeDesired = true;
       put_resp(ctx, H_CONNECTION, "close");
    }

@@ -3,6 +3,11 @@ SRC_DIR := server/src
 BUILD_DIR := build
 INSTALL_DIR := ../../apps/Misc
 
+CC := gcc
+CFLAGS = -std=c99 -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d 
+CFLAGS += -fPIC -DNO_SSL -Wall -Wno-unused-variable -Wno-unused-function -Wno-pointer-sign -Werror 
+EXE := $(BIN_DIR)/misc.exe
+
 ifeq ($(OS),Windows_NT)
   detected_OS := Windows
 else
@@ -11,18 +16,17 @@ endif
 
 ifeq ($(detected_OS),Windows)
    C_FILES := $(shell find $(SRC_DIR) -name '*.c' -not -path '*/os-linux/*' -not -path '*/os-mac/*')
+	LIBS=-lws2_32 -ladvapi32 -mwindows
 else ifeq ($(detected_OS),Darwin)
    C_FILES := $(shell find $(SRC_DIR) -name '*.c' -not -path '*/os-linux/*' -not -path '*/os-win32/*')
 else
+   SHELL := /bin/bash
    C_FILES := $(shell find $(SRC_DIR) -name '*.c' -not -path '*/os-win32/*' -not -path '*/os-mac/*')
+	LIBS=-lpthread
+	CFLAGS += -D_DEFAULT_SOURCE -g
+	EXE := $(BIN_DIR)/misc
 endif
 
-
-CC := gcc
-CFLAGS = -std=c99 -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d 
-CFLAGS += -fPIC -DNO_SSL -Wall -Wno-unused-variable -Wno-unused-function -Wno-pointer-sign -Werror
-
-EXE := $(BIN_DIR)/misc.exe
 JS := $(BIN_DIR)/srcroot/prod/bundle.js
 CSS := $(BIN_DIR)/srcroot/prod/bundle.css
 ASSETS := $(BIN_DIR)/assets.info
@@ -49,7 +53,7 @@ $(OBJ_FILES): $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c $(BUILD_DIR)/%.d
 	@printf "  \xE2\x9c\x93 $@\n"
 
 $(EXE): $(OBJ_FILES)
-	@$(CC) -o $@ $^ -lws2_32 -ladvapi32 -mwindows
+	@$(CC) -o $@ $^ $(LIBS)
 	@printf "  \xE2\x9c\x93 $(EXE)\n"
 
 dirs:
