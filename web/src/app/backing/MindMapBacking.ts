@@ -1,8 +1,8 @@
-import {Action, dispatcher, Store} from "../../utils/flux.js";
+import {Action, Store} from "../../utils/flux.js";
 import {getKey, isPrintableKey} from "../../utils/keyboard.js";
 import {stableStringify} from "../../utils/stringify.js";
-import {divide} from "../../utils/utils.js";
-import {actionUnhandledKey, actionUpdateDownloaded, appSave, AppStore, GLOBAL_KEY_HANDLERS} from "./AppBacking.js";
+import {divide, path} from "../../utils/utils.js";
+import {actionUpdateDownloaded, appSave, AppStore, GLOBAL_KEY_HANDLERS} from "./AppBacking.js";
 
 export interface MapNode {
    id: number;
@@ -42,17 +42,21 @@ interface MindMapExportData {
    originY:number;
 }
 
-export const MindMapStore = new Store<MindMapStoreData>("MindMapStore", {
-   root: newMapNode("Root", 1, null),
-   allNodes: [1],
-   $nonRootNodes: {},
-   $kids: {1: []},
-   selectedId: -1,
-   maxId: 1,
-   cursorIx: -1,
-   originX: 800,
-   originY: 300,
-})
+export const MindMapStore = new Store<MindMapStoreData>("MindMapStore", defaultData());
+
+function defaultData() {
+   return {
+      root: newMapNode(path(), 1, null),
+      allNodes: [1],
+      $nonRootNodes: {},
+      $kids: {1: []},
+      selectedId: -1,
+      maxId: 1,
+      cursorIx: -1,
+      originX: 800,
+      originY: 300,
+   }
+}
 
 export function getNode(id:number) {
    return id == ROOT_ID ? MindMapStore.data.root : MindMapStore.data.$nonRootNodes[id];
@@ -69,8 +73,11 @@ export function getColors(node:MapNode) {
 }
 
 actionUpdateDownloaded.add((arg) => {
-   if (AppStore.data.content == "mindmap") {
-      const newData:MindMapExportData = AppStore.data.payload;
+   if (AppStore.data.content.type == "mindmap" && !arg.viaSave) {
+      let newData:MindMapExportData = defaultData();
+      if (typeof AppStore.data.content.exportData != "string") {
+         newData = AppStore.data.content.exportData;
+      }
       const curData = exportData(MindMapStore.data);
       if (!deepEq(newData, curData)) {
          MindMapStore.update(x => {
@@ -93,7 +100,7 @@ actionUpdateDownloaded.add((arg) => {
 });
 
 GLOBAL_KEY_HANDLERS.push((ev) => {
-   if (AppStore.data.content == "mindmap") mindMapOnKey(ev);
+   if (AppStore.data.content.type == "mindmap") mindMapOnKey(ev);
 })
 
 export const actionMindAddKid = Action("mindAddKid", (arg:{parentId:number, afterId:number}) => {
@@ -179,7 +186,7 @@ function layout(x:MindMapStoreData, andSave:boolean) {
       }
    }
    if (andSave) {
-      appSave(exportData(x), "mindmap");
+      appSave({ type: "mindmap", exportData: exportData(x) });
    }
 }
 

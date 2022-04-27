@@ -1,6 +1,6 @@
-import {Action,Store} from "../../utils/flux.js";
-import {log$, path, wait} from "../../utils/utils.js";
-import {actionSaved, actionUpdateDownloaded, appSave, appSaveNow, AppStore} from "./AppBacking.js";
+import {Action, Store} from "../../utils/flux.js";
+import {log$} from "../../utils/utils.js";
+import {actionSaved, actionUpdateDownloaded, appSave, AppStore} from "./AppBacking.js";
 
 export const MarkdownStore = new Store("MarkdownStore", { 
    text: "", 
@@ -11,8 +11,7 @@ export const MarkdownStore = new Store("MarkdownStore", {
 
 export const actionTextChanged = Action("setEditingText", (arg:{text:string}) => {
    MarkdownStore.set("text", arg.text);
-   AppStore.set("netStatus", "net-dirty");
-   appSave(arg.text, "markdown");
+   appSave({type: "markdown", text: arg.text });
 });
 
 export const actionTextEditingDone = Action<void>("textEditingDone", () => {
@@ -22,7 +21,7 @@ export const actionTextEditingDone = Action<void>("textEditingDone", () => {
       MarkdownStore.set("donePending", true);
    } else {
       MarkdownStore.set("donePending", true);
-      appSaveNow(MarkdownStore.data.text, "markdown");
+      appSave({type: "markdown", text: MarkdownStore.data.text}, true);
    }
 });
 
@@ -58,7 +57,8 @@ export const actionToggleContentCheckbox = Action("toggleChecked", (arg:{index:n
       let newText = lines.join("\n");
       MarkdownStore.set("text", newText);
       AppStore.set("netStatus", "net-dirty");
-      appSave(newText, "markdown");
+      appSave({type: "markdown", text: newText});
+      log$(transformMarkdownToHTML(newText));
    }
 });
 
@@ -70,16 +70,17 @@ actionSaved.add(() => {
 })
 
 actionUpdateDownloaded.add((arg) => {
-   if (AppStore.data.content == "markdown" && AppStore.data.payload != MarkdownStore.data.text) {
-      MarkdownStore.set("text", AppStore.data.payload);
+   if (AppStore.data.content.type == "markdown" && !arg.viaSave) {
+      MarkdownStore.set("text", AppStore.data.content.text);
       if (!MarkdownStore.data.isEditing) {
          transformMarkdownToHTML();
       }
    }
 });
 
-async function transformMarkdownToHTML() {
-   let resp = await fetch("/-/md-to-html/", { method: "POST", body: AppStore.data.payload });
+async function transformMarkdownToHTML(text?:string) {
+   if (typeof text == "undefined") { text = AppStore.data.content.text; }
+   let resp = await fetch("/-/md-to-html/", { method: "POST", body: text });
    if (resp.ok) {
       let html = await resp.text();
       actionShowMarkdown({html})

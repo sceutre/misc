@@ -7,7 +7,7 @@ typedef struct Map_s *Map;
 typedef bool (*MapCallbackFn)(char *key, void *value, void *arg);
 
 Map map_new();
-void map_init(Map m);
+Map map_new_ex(bool ignoreCase, int initialSize);
 void map_iterate(Map map, MapCallbackFn f, void *arg);
 void map_free(Map map);
 void map_reset(Map map);

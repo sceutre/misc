@@ -5,9 +5,10 @@
 #include <string.h>
 
 char *strstrIgnoreCase(char *haystack, char *needle);
+int strEndsWith(const char *s, const char *suff);
 char *trim(char *string);
 unsigned long hashInt(unsigned long x);
-unsigned long hashString(char *str);
+unsigned long hashString(char *str, bool ignoreCase);
 void replaceChar(char *text, char find, char replace);
 void maskString(char *text, char *toFind, char mask);
 void lowercase(char *src, char *dest, int n);

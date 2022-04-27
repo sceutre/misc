@@ -20,6 +20,12 @@ char *strstrIgnoreCase(char *haystack, char *needle) {
    }
 }
 
+int strEndsWith(const char *s, const char *suff) {
+    size_t slen = strlen(s);
+    size_t sufflen = strlen(suff);
+    return slen >= sufflen && !memcmp(s + slen - sufflen, suff, sufflen);
+}
+
 char *trim(char *string) {
    while (isspace(*string)) string++;
    int i = 0;
@@ -44,11 +50,12 @@ unsigned long hashInt(unsigned long x) {
    return x;
 }
 
-unsigned long hashString(char *sstr) {
+unsigned long hashString(char *sstr, bool ignoreCase) {
    unsigned char *str = (unsigned char *)sstr;
    unsigned long hash = 5381;
    int c;
-   while ((c = *str++) != 0) hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+   if (ignoreCase) while ((c = tolower(*str++)) != 0) hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+   else while ((c = *str++) != 0) hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
    return hash;
 }
 

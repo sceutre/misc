@@ -94,7 +94,7 @@ static void httpCallback(HttpContext ctx, bool isDone) {
 
 static void workerLoop() {
    CommsSocket socket;
-   struct HttpContextStruct context = { 0, map_new(), map_new(), bytearray_new_ex(0), bytearray_new_ex(0), NULL, httpCallback, false };
+   struct HttpContextStruct context = { 0, map_new_ex(true, 64), map_new_ex(true, 64), bytearray_new_ex(0), bytearray_new_ex(0), NULL, httpCallback, false };
 
    while (true) {
       mutex_lockRW(this.mutex);

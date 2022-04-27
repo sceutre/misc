@@ -1,7 +1,8 @@
 import {useStore} from "../utils/flux.js";
 import {path} from "../utils/utils.js";
-import {actionToggleDark, AppStore, Content, Theme} from "./backing/AppBacking.js";
+import {actionToggleDark, AppStore, toDrawing, toMarkdown, toMindMap} from "./backing/AppBacking.js";
 import {actionTextEditingDone, actionTextEditingStart, MarkdownStore} from "./backing/MarkdownBacking.js";
+import {MindMapStore} from "./backing/MindMapBacking.js";
 import {actionSetCompactMode, actionSidebarTextChanged, Icon, isHtmlChunk, SidebarStore} from "./backing/SidebarBacking.js";
 import {TextArea} from "./TextArea.js";
 
@@ -9,13 +10,21 @@ import {TextArea} from "./TextArea.js";
 export function Sidebar() {
    let {sidebar, compactMode} = useStore(SidebarStore, ["sidebar", "compactMode"]);
    let {theme, content, netStatus} = useStore(AppStore, ["theme", "content", "netStatus"]);
-   let {isEditing} = useStore(MarkdownStore, ["isEditing"]);
+   let {isEditing, text} = useStore(MarkdownStore, ["isEditing", "text"]);
+   let {allNodes} = useStore(MindMapStore, ["allNodes"]);
    let whens:string[] = [];
-   if (netStatus != "net-clean") whens.push("dirty");
-   if (isEditing) whens.push("editing");
-   if (!isEditing && content == "markdown") whens.push("editable");
    whens.push(theme);
+   whens.push(content.type);
    whens.push(compactMode ? "compact" : "normal");
+   if (netStatus != "net-clean") whens.push("dirty");
+   if (content.type == "markdown") {
+      whens.push((isEditing ? "" : "not-") + "editing");
+      if (!text || !text.trim()) whens.push("blank");
+   }
+   if (content.type == "mindmap") {
+      whens.push("editing"); // always editing mindmaps
+      if (allNodes.length <= 1) whens.push("blank");
+   }
    return <div className={compactMode ? "sidebar compact" : "sidebar"}>
       {sidebar?.items.map(x => {
          if (!isWhen(whens, x.when)) 
@@ -55,6 +64,15 @@ function IconLabel(props:{icon:Icon, compact:boolean}) {
             case "$toDark":
             case "$toLight":
                actionToggleDark();
+               break;
+            case "$toMindMap":
+               toMindMap();
+               break;
+            case "$toMarkdown":
+               toMarkdown();
+               break;
+            case "$toDrawing":
+               toDrawing();
                break;
             case "$none":
                break;

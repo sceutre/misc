@@ -12,7 +12,7 @@ Map mimeTypes = NULL;
 #define get(x) map_get(mimeTypes, x)
 
 void mimeInit() {
-   mimeTypes = map_new();
+   mimeTypes = map_new_ex(true, 64);
    put("aac", "audio/aac");
    put(".bmp", "image/bmp");
    put(".css", "text/css");
@@ -55,8 +55,6 @@ char *mimeGet(char *name) {
       if (p == NULL) break;
       ext = p;
    }
-   char loweredExt[10];
-   lowercase(ext, loweredExt, 9);
-   char *res = get(loweredExt);
+   char *res = get(ext);
    return res == NULL ? "application/octet-stream" : res;
 }

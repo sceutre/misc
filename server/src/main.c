@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdarg.h>
+#include <sys/stat.h>
 #include "utils/utils.h"
 #include "utils/list.h"
 #include "utils/log.h"
@@ -80,23 +81,54 @@ static void saveMD(const char *text, unsigned int size, void *userdata) {
 
 static bool markdownToHtml(HttpContext ctx, void *arg) {
    Bytearray input = ctx->requestBody;
-   if (input) md_html(input->bytes, input->size, saveMD, ctx, PARSER_FLAGS, RENDER_FLAGS);
+   if (input) {
+      log_trace("md2html size %d", input->size);
+      md_html(input->bytes, input->size, saveMD, ctx, PARSER_FLAGS, RENDER_FLAGS);
+   }
+   else log_debug("markdownToHtml missing body");
    http_response_headers(ctx, 200, false, "text/html");
    http_send(ctx);
    return true;
 }
 
 static bool wikiGet(HttpContext ctx, void *arg) {
-   char *filename = normalizedPath(dataRoot,  get_req(ctx, H_LOCALPATH), "md");
+   char *exts[] = { "json", "svg", "md" };
+   char *mimes[] = { "application/json", "image/svg+xml", "text/plain" };
+   struct stat statInfo;
+   char *filename = NULL, *mimeType, *p;
+   time_t maxTime = 0;
+   int err;
+   for (int i = 0; i < 3; i++) {
+      p = normalizedPath(dataRoot,  get_req(ctx, H_LOCALPATH), exts[i]);
+      log_trace("checking %s", p);
+      if (i == 2 && filename == NULL) {
+         filename = p;
+         mimeType = mimes[i];
+         break;
+      }
+      err = stat(p, &statInfo);
+      if (err == 0 && statInfo.st_mtime > maxTime) {
+         maxTime = statInfo.st_mtime;
+         filename = p;
+         mimeType = mimes[i];
+         log_trace("tm %ld", maxTime);
+      }
+   }
+
    Bytearray input = bytearray_readfile(filename);
    if (input) bytearray_append_all(ctx->responseBody, input->bytes, input->size);
-   http_response_headers(ctx, 200, false, "text/plain");
+   http_response_headers(ctx, 200, false, mimeType);
    http_send(ctx);
    return true;
 }
 
 static bool wikiSave(HttpContext ctx, void *arg) {
-   char *filename = normalizedPath(dataRoot,  get_req(ctx, H_LOCALPATH), "md");
+   char *name = get_req(ctx, H_LOCALPATH);
+   char *ext = get_req(ctx, "MISC-Ext");
+   if (ext == NULL) {
+      ext = "md";
+   }
+   char *filename = normalizedPath(dataRoot, name, ext);
    bytearray_writefile(ctx->requestBody, filename);
    http_response_headers(ctx, 200, false, "text/plain");
    bytearray_append_all(ctx->responseBody, "Success", 7);
@@ -115,7 +147,7 @@ static void usage() {
        "  --localhost hostname              localhost alias to use when launching from tray\n"
        "  --ext name1;dir1;name2;dir2;...   serve static files in dir1 as /-/ext/name1, and so on\n"
        "  --log logFileName                 log file name or stderr (default log.txt)\n"
-       "  --debug 0,1,2,3                   dev mode: 0=prod, 1=debug, 2=trace, 3=test (default 0)\n\n");
+       "  --debug 1,2,3                     1=debug, 2=trace, 3=test (default 1)\n\n");
 }
 
 static void showHome() {

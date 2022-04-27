@@ -1,38 +1,52 @@
 import {Store,Action} from "../../utils/flux.js";
-import {debounce, log$, path} from "../../utils/utils.js";
+import {log$, path} from "../../utils/utils.js";
 
 export enum Mode {
-   UNLOADED,
    MARKDOWN,
    MARKDOWN_EDIT,
    MINDMAP,
    DRAWING,
-   UPLOAD,
-   CONTENT_CHOOSER,
-   UNLOCK
 }
 
 export type Theme = "dark" | "light";
-export type Content = "unknown" | "markdown" | "mindmap" | "drawing" | "encrypted" | "sidebar";
+export type ContentType = "markdown" | "mindmap" | "drawing"  | "sidebar";
 export type NetStatus = "net-waiting" | "net-clean" | "net-dirty";
-type Downloaded = { data:any, type:Content };
+
+type Content = ContentMarkdown | ContentMindMap | ContentDrawing | ContentSidebar;
+
+interface ContentMarkdown {
+   type: "markdown";
+   text: string;
+}
+
+interface ContentMindMap {
+   type: "mindmap";
+   exportData: any;
+   [k:string]:any;
+}
+
+interface ContentDrawing {
+   type: "drawing";
+   [k:string]:any;
+}
+
+interface ContentSidebar {
+   type: "sidebar";
+   [k:string]:any;
+}
 
 interface AppData {
-   downloaded: string|null;
    content: Content;
-   payload: any;
-   password: string;
    theme: Theme;
    netStatus: NetStatus;
+   raw:string;
 }
 
 export const AppStore = new Store("AppStore", {
-   downloaded: null,
-   content: "unknown",
-   payload: {},
-   password: "",
+   content: {type:"markdown", text:""},
    theme: isDarkTheme() ? "dark" : "light",
-   netStatus: "net-clean"
+   netStatus: "net-clean",
+   raw: ""
 } as AppData);
 
 export const actionToggleDark =  Action("toggleDark", () => {
@@ -42,17 +56,10 @@ export const actionToggleDark =  Action("toggleDark", () => {
 
 export const actionUnhandledKey =  Action("unhandledKey", (arg: {ev:KeyboardEvent}) => {});
 
-export const actionUpdateDownloaded = Action("setData", (arg: Downloaded) => {
+export const actionUpdateDownloaded = Action("setData", (arg: {downloaded:Content, viaSave:boolean, raw:string}) => {
    AppStore.update(x => {
-      x.downloaded = arg.data;
-      if (x.content == "encrypted") {
-         let d = decrypt(x.downloaded!, x.password);
-         x.payload = d.data;
-         x.content = d.type;
-      } else {
-         x.payload = arg.data;
-         x.content = arg.type;
-      }
+      x.content = arg.downloaded;
+      x.raw = arg.raw;
    });
 });
 
@@ -85,14 +92,13 @@ export function appBeginDownloader() {
    setInterval(() => log$(download()), 60000);  
 
    async function download() {
+      if ((Date.now() - appSaveTime) < 10000) return;
       let resp = await fetch("/-/md/" + path());
+      let text:string = "";
       if (resp.ok) {
-         let text = await resp.text();
-         let obj = toObject(text);
-         if (AppStore.data.downloaded != obj.data) actionUpdateDownloaded(obj);
-      } else {
-         actionUpdateDownloaded({data: "", type: "unknown"});
+         text = await resp.text();
       }
+      if (text != AppStore.data.raw) actionUpdateDownloaded({downloaded: toObject(text), viaSave: false, raw: text});
       resp = await fetch("/-/md/sidebar");
       if (resp.ok) {
          let text = await resp.text();
@@ -102,44 +108,75 @@ export function appBeginDownloader() {
    }
 }
 
-export const [appSave, appSaveNow] = debounce(appSaveImpl, 3000);
+let appSaveTimeout:number = 0;
+let appSaveTime:number = 0;
 
-function appSaveImpl(payload:any, type:Content) {
+export function appSave(content:Content, rightNow?:boolean) {
+   AppStore.set("netStatus", "net-dirty");
+   appSaveTime = Date.now();
+   if (appSaveTimeout) {
+      clearTimeout(appSaveTimeout);
+      appSaveTimeout = 0;
+   }
+   if (rightNow) {
+      appSaveImpl(content);
+   } else {
+      appSaveTimeout = window.setTimeout(() => appSaveImpl(content), 700);
+   }
+}
+
+function appSaveImpl(content:Content) {
    log$(save());
 
    async function save() {
-      let data = encode(payload, type);
+      let data = encode(content);
       AppStore.set("netStatus", "net-waiting");
-      let resp = await fetch("-/md/" + path(), { method: "POST", body: data });
+      let p = path();
+      let ext = 'md';
+      if (content.type != "markdown") { ext = 'json' }
+      let resp = await fetch("-/md/" + p, { method: "POST", body: data, headers: {
+         'MISC-Ext': ext  
+      } });
       if (resp.ok) {
-         actionUpdateDownloaded({data:payload, type});
+         actionUpdateDownloaded({downloaded: content, viaSave: true, raw: data});
          actionSaved();
-      } else {
-         appSave(payload, type);
       }
    }
 }
 
-function toObject(text:string):Downloaded {
-   if (path() == "Sidebar") return { data: text, type: "sidebar" };
-   if (text.startsWith("{")) return JSON.parse(text);
-   return { data: text, type: "markdown"};
+function toObject(text:string):Content {
+   let t = text.trim();
+   if (t.startsWith("{") && t.endsWith("}")) return JSON.parse(text);
+   return { type: "markdown", text };
 }
 
-function decrypt(cipherText:string, password:string):Downloaded {
-   return { data: "", type: "unknown" };   
-}
-
-function encode(payload:any, type:Content) {
-   if (path() == "Sidebar" || type == "markdown" && !payload.startsWith("{") && !AppStore.data.password) {
-      // sidebar is special case, and for plaintext markdown leave it as raw markdown so it's easier to view outside of wiki
-      return payload;
+function encode(content:Content) {
+   if (content.type == "markdown") {
+      // save markdown as raw text so it can be viewed on disk easily
+      return content.text;
    }
-   let d:Downloaded = { data: payload, type };
-   let encoded = JSON.stringify(d);
-   if (AppStore.data.password) {
-   }
-   return encoded;
+   return JSON.stringify(content);
 }
 
 export const GLOBAL_KEY_HANDLERS:{(ev:KeyboardEvent):void}[] = [];
+
+export function toMarkdown() {
+   let content = toObject("");
+   let text = encode(content);
+   actionUpdateDownloaded({downloaded: content, viaSave: false, raw: text});
+   appSave(content, true);
+}
+
+export function toMindMap() {
+   let content:ContentMindMap = { type: "mindmap", exportData: "" };
+   let text = encode(content);
+   actionUpdateDownloaded({downloaded: content, viaSave: false, raw: text});
+   appSave(content, true);
+}
+
+export function toDrawing() {
+   let content:ContentDrawing = { type: "drawing", exportData: "" };
+   let text = encode(content);
+   actionUpdateDownloaded({downloaded: content, viaSave: false, raw: text});
+   appSave(content, true);
+}

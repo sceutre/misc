@@ -45,8 +45,6 @@
     #define snprintf _snprintf
 #endif
 
-
-
 typedef struct MD_HTML_tag MD_HTML;
 struct MD_HTML_tag {
     void (*process_output)(const MD_CHAR*, MD_SIZE, void*);
@@ -54,6 +52,7 @@ struct MD_HTML_tag {
     unsigned flags;
     int image_nesting_level;
     char escape_map[256];
+    char last_wiki_target[128];
 };
 
 #define NEED_HTML_ESC_FLAG   0x1
@@ -283,6 +282,7 @@ static int enter_span_callback(MD_SPANTYPE type, void* detail, void* userdata);
 static int leave_span_callback(MD_SPANTYPE type, void* detail, void* userdata);
 static int text_callback(MD_TEXTTYPE type, const MD_CHAR* text, MD_SIZE size, void* userdata);
 static void debug_log_callback(const char* msg, void* userdata);
+#define RENDER_HTML_ESCAPED render_html_escaped
 #define RENDER_OPEN_WIKILINK_SPAN render_open_wikilink_span
 #define LEAVE_SPAN_CALLBACK leave_span_callback
 #define RENDER_OPEN_LI_BLOCK render_open_li_block
@@ -537,7 +537,7 @@ text_callback(MD_TEXTTYPE type, const MD_CHAR* text, MD_SIZE size, void* userdat
         case MD_TEXT_SOFTBR:    RENDER_VERBATIM(r, (r->image_nesting_level == 0 ? "\n" : " ")); break;
         case MD_TEXT_HTML:      render_verbatim(r, text, size); break;
         case MD_TEXT_ENTITY:    render_entity(r, text, size, render_html_escaped); break;
-        default:                render_html_escaped(r, text, size); break;
+        default:                RENDER_HTML_ESCAPED(r, text, size); break;
     }
 
     return 0;

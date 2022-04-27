@@ -15,25 +15,36 @@ typedef struct MapElement_s *MapElement;
 struct Map_s {
    int capacity;
    int size;
+   bool ignoreCase;
    MapElement data;
 };
 
 #define INITIAL_SIZE 64
-#define issame(e,k,h) (e.hash == h && strcmp(k,e.key) == 0)
+#define issame(e,k,h,ignoreCase) (e.hash == h && (ignoreCase ? strcasecmp(k,e.key) : strcmp(k,e.key)) == 0)
 #define isempty(e) (e.key == NULL)
 #define empty(e) (e.key = NULL)
 #define fill(e,k,h,value) (e.data = value, e.key=k, e.hash=h)
 
+void map_init(Map m, int initialSize);
+
 Map map_new() {
    Map m = calloc(1, sizeof(*m));
-   map_init(m);
+   map_init(m, INITIAL_SIZE);
    return m;
 }
 
-void map_init(Map m) {
-   m->data = calloc(INITIAL_SIZE, sizeof(struct MapElement_s));
-   m->capacity = INITIAL_SIZE;
+Map map_new_ex(bool ignoreCase, int initialSize) {
+   Map m = calloc(1, sizeof(*m));
+   map_init(m, initialSize);
+   m->ignoreCase = ignoreCase;
+   return m;
+}
+
+void map_init(Map m, int N) {
+   m->data = calloc(N, sizeof(struct MapElement_s));
+   m->capacity = N;
    m->size = 0;
+   m->ignoreCase = false;
 }
 
 void map_reset(Map map) {
@@ -67,13 +78,13 @@ int map_length(Map map) {
 
 static int indexOf(Map map, char *key) {
    if (map->capacity == 0) return -1;
-   unsigned long h = hashString(key);
+   unsigned long h = hashString(key, map->ignoreCase);
    MapElement array = map->data;
    int mask = map->capacity - 1;
    int i = h & mask;
    while (true) {
       if (isempty(array[i])) return -1;
-      if (issame(array[i], key, h)) return i;
+      if (issame(array[i], key, h, map->ignoreCase)) return i;
       i = (i + 1) & mask;
    }
 }
@@ -93,7 +104,7 @@ static void grow(Map map) {
 }
 
 bool map_put(Map map, char *key, void *value) {
-   unsigned long h = hashString(key);
+   unsigned long h = hashString(key, map->ignoreCase);
    MapElement array = map->data;
    int mask = map->capacity - 1;
    int i = h & mask;
@@ -107,7 +118,7 @@ bool map_put(Map map, char *key, void *value) {
          fill(array[i], key, h, value);
          return true;
       }
-      if (issame(array[i], key, h)) {
+      if (issame(array[i], key, h, map->ignoreCase)) {
          fill(array[i], key, h, value);
          return false;
       }

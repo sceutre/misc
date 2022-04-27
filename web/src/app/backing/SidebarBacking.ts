@@ -29,7 +29,7 @@ export const actionSidebarTextChanged = Action("setSidebarEditingText", (arg:{te
    SidebarStore.set("text", arg.text);
    try {
       AppStore.set("netStatus", "net-dirty");
-      appSave(arg.text, "sidebar");
+      appSave(JSON.parse(arg.text));
    } catch (e) {
       console.warn(e);
    }
@@ -40,9 +40,8 @@ actionSetSidebar.add((arg:{sidebar:SidebarData}) => {
 })
 
 actionUpdateDownloaded.add((arg) => {
-   if (AppStore.data.content == "sidebar") {
-      if (SidebarStore.data.text != AppStore.data.payload)
-         SidebarStore.set("text", AppStore.data.payload);
+   if (AppStore.data.content.type == "sidebar" && !arg.viaSave) {
+      SidebarStore.set("text", JSON.stringify(AppStore.data.content, null, 3));
    }
 });
 

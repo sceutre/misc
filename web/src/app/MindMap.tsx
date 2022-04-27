@@ -54,14 +54,15 @@ class MindMapClass extends React.PureComponent<PropsDerived & PropsInline> {
       let {allNodes, paths, minX, minY, maxX, maxY, isDark, selectionId, cursorIx, containerWidth, containerHeight} = this.props;
       let w = maxX - minX;
       let h = maxY - minY;
+      let top = (-minY + Math.max(0,(containerHeight - h)/4));
       return (
          <div
             style={{
                position: "relative",
-               top: (-minY + Math.max(0,(containerHeight - h)/4)) + "px",
+               top: top + "px",
                left: (-minX + Math.max(0,(containerWidth - w)/2)) + "px",
                width: w + "px",
-               height: h + "px"
+               height: (h - Math.abs(top) + 20)  + "px"
             }}
             tabIndex={0} onKeyDown={mindMapOnKey} onClick={this.onClick}>
             <svg style={{position: "absolute", top: minY + "px", left: minX + "px", height: (maxY - minY) + "px", width: (maxX - minX) + "px", pointerEvents: "none"}}>
