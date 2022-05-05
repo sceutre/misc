@@ -26,12 +26,12 @@ export function Sidebar() {
       if (allNodes.length <= 1) whens.push("blank");
    }
    return <div className={compactMode ? "sidebar compact" : "sidebar"}>
-      {sidebar?.items.map(x => {
+      {sidebar?.items.map((x,i) => {
          if (!isWhen(whens, x.when)) 
             return null;
          if (isHtmlChunk(x))
-            return <div style={x.wrapperStyle} dangerouslySetInnerHTML={{__html: x.html}}></div>
-         return <IconLabel icon={x} compact={compactMode} />
+            return <div style={x.wrapperStyle} key={i} dangerouslySetInnerHTML={{__html: x.html}}></div>
+         return <IconLabel key={i} icon={x} compact={compactMode} />
       })}
       <IconArrow/>
    </div>;

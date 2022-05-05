@@ -1,18 +1,11 @@
 import {Store,Action} from "../../utils/flux.js";
 import {log$, path} from "../../utils/utils.js";
 
-export enum Mode {
-   MARKDOWN,
-   MARKDOWN_EDIT,
-   MINDMAP,
-   DRAWING,
-}
-
 export type Theme = "dark" | "light";
-export type ContentType = "markdown" | "mindmap" | "drawing"  | "sidebar";
+export type ContentType = "markdown" | "mindmap" | "drawing"  | "sidebar" | "empty";
 export type NetStatus = "net-waiting" | "net-clean" | "net-dirty";
 
-type Content = ContentMarkdown | ContentMindMap | ContentDrawing | ContentSidebar;
+type Content = ContentMarkdown | ContentMindMap | ContentDrawing | ContentSidebar | ContentEmpty;
 
 interface ContentMarkdown {
    type: "markdown";
@@ -35,6 +28,10 @@ interface ContentSidebar {
    [k:string]:any;
 }
 
+interface ContentEmpty {
+   type: "empty";
+}
+
 interface AppData {
    content: Content;
    theme: Theme;
@@ -43,7 +40,7 @@ interface AppData {
 }
 
 export const AppStore = new Store("AppStore", {
-   content: {type:"markdown", text:""},
+   content: {type:"empty"},
    theme: isDarkTheme() ? "dark" : "light",
    netStatus: "net-clean",
    raw: ""

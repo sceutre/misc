@@ -34,7 +34,7 @@ static int leave_span_callback2(MD_SPANTYPE type, void* detail, void* userdata) 
 static void render_html_escaped2(MD_HTML* r, const MD_CHAR* data, MD_SIZE size) {
    if (r->flags & MD_HTML_FLAG_INWIKI && strncmp(data, "img ", 4) == 0) {
       log_debug("IN WIKI link{%s} rendering{%.*s}", r->last_wiki_target, size, data);
-      RENDER_VERBATIM(r, "<img src=\"");
+      RENDER_VERBATIM(r, "<img src=\"img/");
       RENDER_VERBATIM(r, r->last_wiki_target);
       RENDER_VERBATIM(r, "\" ");
       render_verbatim(r, data + 4, size-4);

@@ -79,7 +79,7 @@ actionUpdateDownloaded.add((arg) => {
 });
 
 async function transformMarkdownToHTML(text?:string) {
-   if (typeof text == "undefined") { text = AppStore.data.content.text; }
+   if (typeof text == "undefined" && AppStore.data.content.type == "markdown") { text = AppStore.data.content.text; }
    let resp = await fetch("/-/md-to-html/", { method: "POST", body: text });
    if (resp.ok) {
       let html = await resp.text();

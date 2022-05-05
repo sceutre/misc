@@ -228,6 +228,16 @@
    100% { background-color: var(--main-fg-t); }
  }
 
+ @keyframes svg-blink { 
+   0% { stroke-opacity: 1; }
+   50% { stroke-opacity: 0; }
+   100% { stroke-opacity: 1; }
+ }
+
+ svg line.svgBlink {
+   animation: svg-blink steps(1) 800ms infinite;
+ }
+
  .cursor {
     white-space: pre;
     width: 1px;

@@ -33,11 +33,11 @@ static char *localhost;
 static int debugMode;
 static int port;
 
-static char *normalizedPath(const char *dir, char *file, const char *ext) {
+static char *normalizedPath(const char *dir, const char *subdir, char *file, const char *ext) {
    char *p = file;
    while (*(++p))
       if (!isalnum(*p)) *p = '_';
-   return t_printf("%s/%s%s%s", dir, file, ext ? "." : "", ext ? ext : "");
+   return t_printf("%s/%s%s%s%s", dir, subdir, file, ext ? "." : "", ext ? ext : "");
 }
 
 static char *hPath(char *p, ...) {
@@ -91,33 +91,48 @@ static bool markdownToHtml(HttpContext ctx, void *arg) {
    return true;
 }
 
-static bool wikiGet(HttpContext ctx, void *arg) {
-   char *exts[] = { "json", "svg", "md" };
-   char *mimes[] = { "application/json", "image/svg+xml", "text/plain" };
+
+static int getLatestFile(char *dir, char *subdir, char *name, char *exts[], int N) {
    struct stat statInfo;
-   char *filename = NULL, *mimeType, *p;
    time_t maxTime = 0;
-   int err;
-   for (int i = 0; i < 3; i++) {
-      p = normalizedPath(dataRoot,  get_req(ctx, H_LOCALPATH), exts[i]);
-      log_trace("checking %s", p);
-      if (i == 2 && filename == NULL) {
-         filename = p;
-         mimeType = mimes[i];
+   int err, maxI = N - 1;
+   for (int i = 0; i < N; i++) {
+      if (i == N-1 && maxTime == 0) 
          break;
-      }
+      char *p = normalizedPath(dir, subdir, name, exts[i]);
+      log_trace("checking %s", p);
       err = stat(p, &statInfo);
       if (err == 0 && statInfo.st_mtime > maxTime) {
          maxTime = statInfo.st_mtime;
-         filename = p;
-         mimeType = mimes[i];
+         maxI = i;
          log_trace("tm %ld", maxTime);
       }
    }
+   return maxI;
+}
 
+static bool wikiGet(HttpContext ctx, void *arg) {
+   char *localPath = get_req(ctx, H_LOCALPATH);
+   char *exts[] = { "json", "md" };
+   char *mimes[] = { "application/json", "text/plain" };
+   int i = getLatestFile(dataRoot, "", localPath, exts, 2);
+   char *filename = normalizedPath(dataRoot, "", localPath, exts[i]);
    Bytearray input = bytearray_readfile(filename);
    if (input) bytearray_append_all(ctx->responseBody, input->bytes, input->size);
-   http_response_headers(ctx, 200, false, mimeType);
+   http_response_headers(ctx, 200, false, mimes[i]);
+   http_send(ctx);
+   return true;
+}
+
+static bool wikiGetImg(HttpContext ctx, void *arg) {
+   char *localPath = get_req(ctx, H_LOCALPATH);
+   char *exts[] = { "png", "jpg", "svg" };
+   char *mimes[] = { "image/png", "image/jpeg", "image/svg+xml" };
+   int i = getLatestFile(dataRoot, "img/", localPath, exts, 3);
+   char *filename = normalizedPath(dataRoot, "img/",  localPath, exts[i]);
+   Bytearray input = bytearray_readfile(filename);
+   if (input) bytearray_append_all(ctx->responseBody, input->bytes, input->size);
+   http_response_headers(ctx, 200, false, mimes[i]);
    http_send(ctx);
    return true;
 }
@@ -128,7 +143,7 @@ static bool wikiSave(HttpContext ctx, void *arg) {
    if (ext == NULL) {
       ext = "md";
    }
-   char *filename = normalizedPath(dataRoot, name, ext);
+   char *filename = normalizedPath(dataRoot, "", name, ext);
    bytearray_writefile(ctx->requestBody, filename);
    http_response_headers(ctx, 200, false, "text/plain");
    bytearray_append_all(ctx->responseBody, "Success", 7);
@@ -217,6 +232,7 @@ int main(int argc, char **argv) {
          usageOnCatch = false;
          log_info("running on port %d, src={%s}, data={%s}, mode={%d}, localhost={%s}, ext={%s}", port, srcRoot, dataRoot, debugMode, localhost, externalFolders);
          web_handler("md_to_html", "POST", "/-/md-to-html/", markdownToHtml, NULL);
+         web_handler("wiki_get_img", "GET", "/img/", wikiGetImg, NULL);
          web_handler("wiki_get", "GET", "/-/md/", wikiGet, NULL);
          web_handler("wiki_save", "POST", "/-/md/", wikiSave, NULL);
          log_trace("past web handlers");

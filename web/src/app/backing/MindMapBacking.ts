@@ -380,7 +380,7 @@ function measureTextImpl(level: number, text: string): TextMeasurement {
    return result;
 };
 
-function measureText(level: number, text: string) {
+export function measureText(level: number, text: string) {
    let k = text + level;
    let rez = measureCache.get(k);
    if (!rez) {
