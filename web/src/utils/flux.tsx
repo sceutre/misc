@@ -1,3 +1,4 @@
+import * as React from "react";
 
 export type Fn<T = any, V = any> = (arg: T) => V;
 type FnId<T = any, V = any> = Fn<T,V> & { id: number };

@@ -59,7 +59,7 @@ $(EXE): $(OBJ_FILES)
 dirs:
 	@mkdir -p $(DIRS)
 	@mkdir -p $(BIN_DIR)/srcroot/dev
-	@mkdir -p $(BIN_DIR)/srcroot/prod/node_flat
+	@if [ ! -e bin/srcroot/node_mods ]; then cmd //c "mklink /D bin\srcroot\dev\node_modules ..\..\..\web\node_modules" > /dev/null ; fi
 
 clean:
 	@rm -rf $(TARGET) $(ASSETS) $(BIN_DIR)/srcroot $(BUILD_DIR)
@@ -86,7 +86,6 @@ $(CSS): $(shell find web/src -name *.css -type f)
 $(ASSETS): $(shell find web/assets -type f)
 	@cp web/assets/*.html $(BIN_DIR)/srcroot
 	@cp -R web/assets/prod/* $(BIN_DIR)/srcroot/prod
-	@cp web/node_modules/react*/umd/{react,react-dom}.{development,production}.*js $(BIN_DIR)/srcroot/prod/node_flat 
 	@touch $(ASSETS)
 	@printf "  \xE2\x9c\x93 $@\n"
 

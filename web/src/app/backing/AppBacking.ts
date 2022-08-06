@@ -36,14 +36,14 @@ interface AppData {
    content: Content;
    theme: Theme;
    netStatus: NetStatus;
-   raw:string;
+   raw:string|null;
 }
 
 export const AppStore = new Store("AppStore", {
    content: {type:"empty"},
    theme: isDarkTheme() ? "dark" : "light",
    netStatus: "net-clean",
-   raw: ""
+   raw: null
 } as AppData);
 
 export const actionToggleDark =  Action("toggleDark", () => {

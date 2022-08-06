@@ -1,6 +1,7 @@
 import {Action, Store} from "../../utils/flux.js";
-import {log$} from "../../utils/utils.js";
+import {log$, wait} from "../../utils/utils.js";
 import {actionSaved, actionUpdateDownloaded, appSave, AppStore} from "./AppBacking.js";
+import {markedExtToHtml} from "../../utils/markedExt.js";
 
 export const MarkdownStore = new Store("MarkdownStore", { 
    text: "", 
@@ -37,28 +38,27 @@ export const actionShowMarkdown = Action("showMarkdown", (arg: {html:string}) =>
 })
 
 export const actionToggleContentCheckbox = Action("toggleChecked", (arg:{index:number}) => {
-   let index = arg.index;
+   let ix = arg.index;
    let lines = MarkdownStore.data.text.split("\n");
-   let i = 0;
-   while (true) {
-      if (lines[i].length > index || i == lines.length - 1) break;
-      index -= lines[i].length+1;
-      i++;
-   }
-   let matches = /^([^[]+) \[([xX ])\] (.*)$/.exec(lines[i]);
-   if (matches) {
-      let prefix = matches[1];
-      let mid = matches[2];
-      let suffix = matches[3].trim();
-      mid = (mid == " ") ? "x" : " ";
-      suffix = suffix.replace(/^~(.*)~$/, "$1");
-      if (mid == "x") suffix = "~" + suffix + "~";
-      lines[i] = prefix + " [" + mid + "] " + suffix;
-      let newText = lines.join("\n");
-      MarkdownStore.set("text", newText);
-      AppStore.set("netStatus", "net-dirty");
-      appSave({type: "markdown", text: newText});
-      log$(transformMarkdownToHTML(newText));
+   for (let i=0; i < lines.length; i++) {
+      let matches = /^([^[]+) \[([xX ])\] (.*)$/.exec(lines[i]);
+      if (matches) {
+         if (--ix < 0) {
+            let prefix = matches[1];
+            let mid = matches[2];
+            let suffix = matches[3].trim();
+            mid = (mid == " ") ? "x" : " ";
+            suffix = suffix.replace(/^~(.*)~$/, "$1");
+            if (mid == "x") suffix = "~" + suffix + "~";
+            lines[i] = prefix + " [" + mid + "] " + suffix;
+            let newText = lines.join("\n");
+            MarkdownStore.set("text", newText);
+            AppStore.set("netStatus", "net-dirty");
+            appSave({type: "markdown", text: newText});
+            log$(transformMarkdownToHTML(newText));
+            return;
+         }
+      }
    }
 });
 
@@ -79,12 +79,9 @@ actionUpdateDownloaded.add((arg) => {
 });
 
 async function transformMarkdownToHTML(text?:string) {
+   await wait(0);
    if (typeof text == "undefined" && AppStore.data.content.type == "markdown") { text = AppStore.data.content.text; }
-   let resp = await fetch("/-/md-to-html/", { method: "POST", body: text });
-   if (resp.ok) {
-      let html = await resp.text();
-      actionShowMarkdown({html})
-   } else {
-      throw "retrieving MD failed";
+   if (text) {
+      actionShowMarkdown({html: markedExtToHtml(text)})
    }
 }

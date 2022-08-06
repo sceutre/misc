@@ -1,3 +1,4 @@
+import * as React from "react";
 import {Action} from "../utils/flux.js";
 
 interface TextAreaProps {

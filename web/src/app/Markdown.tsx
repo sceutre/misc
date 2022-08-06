@@ -1,3 +1,4 @@
+import * as React from "react";
 import {useStore} from "../utils/flux.js";
 import {path} from "../utils/utils.js";
 import {actionTextChanged, actionTextEditingDone, actionToggleContentCheckbox, MarkdownStore} from "./backing/MarkdownBacking.js";
@@ -9,7 +10,7 @@ export const Markdown = () => {
 };
 
 const MarkdownDisplay = () => {
-   let {html} = useStore(MarkdownStore, ["html"])
+   let {text, html} = useStore(MarkdownStore, ["text", "html"]);
    return (<div className="main markdown-display">
       <div className="main-title">{path().replace(/[_]/g, " ")}</div>
       <div className="markdown-body" dangerouslySetInnerHTML={{__html: html}} onClick={onClick}></div>

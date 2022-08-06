@@ -1,3 +1,4 @@
+import * as React from "react";
 import {useStore} from "../utils/flux.js";
 import {AppStore} from "./backing/AppBacking.js";
 import {Drawing} from "./Drawing.js";
@@ -13,7 +14,7 @@ export function App() {
       case "markdown":   ctx = <Markdown />;       break;
       case "mindmap":    ctx = <MindMap />;        break;
       case "sidebar":    ctx = <SidebarEdit />;    break;
-      case "empty": return null; 
+      case "empty":      return null; 
    }
    return <div className={`app ${theme} ${netStatus}`}>
       <Sidebar />

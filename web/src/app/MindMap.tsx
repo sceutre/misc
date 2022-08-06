@@ -2,6 +2,7 @@ import {actionMindAddKid, actionMindDelete, actionMindSelectNode, actionMindSetC
 import {AppStore} from "./backing/AppBacking.js";
 import {connect, useContainerDimensions} from "../utils/flux.js";
 import {divide} from "../utils/utils.js";
+import * as React from "react";
 
 interface PropsInline {
    containerWidth:number;

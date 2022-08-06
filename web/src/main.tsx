@@ -1,3 +1,5 @@
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 import {App} from "./app/App.js";
 import {appBeginDownloader, GLOBAL_KEY_HANDLERS} from "./app/backing/AppBacking.js";
 import {dispatcher} from "./utils/flux.js";

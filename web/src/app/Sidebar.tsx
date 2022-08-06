@@ -1,3 +1,4 @@
+import * as React from "react";
 import {useStore} from "../utils/flux.js";
 import {path} from "../utils/utils.js";
 import {actionToggleDark, AppStore, toDrawing, toMarkdown, toMindMap} from "./backing/AppBacking.js";

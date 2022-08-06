@@ -12,13 +12,9 @@
 #include "http/web.h"
 #include "http/files.h"
 #include "tests/tests.h"
-#include "markdown/md4c-html.h"
 #include "http/mime.h"
 
 #define TOOLTIP "Misc documentation server - built " __DATE__ 
-
-#define PARSER_FLAGS (MD_FLAG_STRIKETHROUGH | MD_FLAG_TABLES | MD_FLAG_NOINDENTEDCODEBLOCKS | MD_FLAG_TASKLISTS | MD_FLAG_WIKILINKS | MD_FLAG_UNDERLINE)
-#define RENDER_FLAGS 0
 
 #define FILE_MD 1
 #define FILE_UPLOAD 2
@@ -78,19 +74,6 @@ static void saveMD(const char *text, unsigned int size, void *userdata) {
    HttpContext ctx = userdata;
    bytearray_append_all(ctx->responseBody, text, size);
 }
-
-static bool markdownToHtml(HttpContext ctx, void *arg) {
-   Bytearray input = ctx->requestBody;
-   if (input) {
-      log_trace("md2html size %d", input->size);
-      md_html(input->bytes, input->size, saveMD, ctx, PARSER_FLAGS, RENDER_FLAGS);
-   }
-   else log_debug("markdownToHtml missing body");
-   http_response_headers(ctx, 200, false, "text/html");
-   http_send(ctx);
-   return true;
-}
-
 
 static int getLatestFile(char *dir, char *subdir, char *name, char *exts[], int N) {
    struct stat statInfo;
@@ -231,7 +214,6 @@ int main(int argc, char **argv) {
       } else {
          usageOnCatch = false;
          log_info("running on port %d, src={%s}, data={%s}, mode={%d}, localhost={%s}, ext={%s}", port, srcRoot, dataRoot, debugMode, localhost, externalFolders);
-         web_handler("md_to_html", "POST", "/-/md-to-html/", markdownToHtml, NULL);
          web_handler("wiki_get_img", "GET", "/img/", wikiGetImg, NULL);
          web_handler("wiki_get", "GET", "/-/md/", wikiGet, NULL);
          web_handler("wiki_save", "POST", "/-/md/", wikiSave, NULL);
