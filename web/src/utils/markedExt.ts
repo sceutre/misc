@@ -168,7 +168,16 @@ function init() {
 }
 
 function tablerow(data:string[]|undefined, td:string) {
-   if (data) return `<tr>${data.map(c => `<${td}>${c}</${td}>`).join("")}</tr>`;
+   if (data) {
+      return `<tr>${data.map((c,i) => {
+         let style = "";
+         let align = extData.tableData!.align[i];
+         console.log(align,i);
+         if (align=="right")  { style = ' style="text-align:right"'; }
+         if (align=="center") { style = ' style="text-align:center"'; }
+         return `<${td}${style}>${c}</${td}>`
+      }).join("")}</tr>`;
+   }
    return "";
 }
 

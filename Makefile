@@ -59,7 +59,8 @@ $(EXE): $(OBJ_FILES)
 dirs:
 	@mkdir -p $(DIRS)
 	@mkdir -p $(BIN_DIR)/srcroot/dev
-	@if [ ! -e bin/srcroot/node_mods ]; then cmd //c "mklink /D bin\srcroot\dev\node_modules ..\..\..\web\node_modules" > /dev/null ; fi
+	@if [ ! -e bin/srcroot/dev/node_modules ]; then cmd //c "mklink /D bin\srcroot\dev\node_modules ..\..\..\web\node_modules" > /dev/null ; fi 
+	@printf "  \xE2\x9c\x93 $@\n"
 
 clean:
 	@rm -rf $(TARGET) $(ASSETS) $(BIN_DIR)/srcroot $(BUILD_DIR)
@@ -93,7 +94,9 @@ $(DEP_FILES): $(BUILD_DIR)/%.d: ;
 
 install: clean release
 	@rm -rf $(INSTALL_DIR)/misc.exe $(INSTALL_DIR)/srcroot
+	@rm $(BIN_DIR)/srcroot/dev/node_modules
 	@cp -R $(BIN_DIR)/misc.exe $(BIN_DIR)/srcroot $(INSTALL_DIR)
+	@cmd //c "mklink /D bin\srcroot\dev\node_modules ..\..\..\web\node_modules" > /dev/null
 	@printf "  \xE2\x9c\x93 $@\n"
 
 css: $(CSS)
