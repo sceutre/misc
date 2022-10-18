@@ -46,14 +46,14 @@ export const AppStore = new Store("AppStore", {
    raw: null
 } as AppData);
 
-export const actionToggleDark =  Action("toggleDark", () => {
+export const actionToggleDark =  Action("actionToggleDark", () => {
    toggleDarkTheme();
    AppStore.set("theme", isDarkTheme() ? "dark" : "light");
 });
 
-export const actionUnhandledKey =  Action("unhandledKey", (arg: {ev:KeyboardEvent}) => {});
+export const actionUnhandledKey =  Action("actionUnhandledKey", (arg: {ev:KeyboardEvent}) => {});
 
-export const actionUpdateDownloaded = Action("setData", (arg: {downloaded:Content, viaSave:boolean, raw:string}) => {
+export const actionUpdateDownloaded = Action("actionUpdateDownloaded", (arg: {downloaded:Content, viaSave:boolean, raw:string}) => {
    AppStore.update(x => {
       x.content = arg.downloaded;
       x.raw = arg.raw;
@@ -61,13 +61,13 @@ export const actionUpdateDownloaded = Action("setData", (arg: {downloaded:Conten
 });
 
 // just for others to hook into
-export const actionSetSidebar = Action("setSidebar", (arg:{sidebar:any}) => {});
+export const actionSetSidebar = Action("actionSetSidebar", (arg:{sidebar:any}) => {});
 
-export const actionSaved = Action("saveDone", () => {
+export const actionSaved = Action("actionSaved", () => {
    AppStore.set("netStatus", "net-clean")
 });
 
-export const actionDirty = Action("becomeDirty", () => {
+export const actionDirty = Action("actionDirty", () => {
    AppStore.set("netStatus", "net-dirty")
 });
 

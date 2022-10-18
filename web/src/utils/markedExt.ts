@@ -172,7 +172,7 @@ function tablerow(data:string[]|undefined, td:string) {
       return `<tr>${data.map((c,i) => {
          let style = "";
          let align = extData.tableData!.align[i];
-         console.log(align,i);
+         //console.log(align,i);
          if (align=="right")  { style = ' style="text-align:right"'; }
          if (align=="center") { style = ' style="text-align:center"'; }
          return `<${td}${style}>${c}</${td}>`

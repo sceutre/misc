@@ -25,7 +25,7 @@ export const SidebarStore = new Store("SidebarStore", {
    compactMode: localStorage.getItem("compactMode") == "true"
 });
 
-export const actionSidebarTextChanged = Action("setSidebarEditingText", (arg:{text:string}) => {
+export const actionSidebarTextChanged = Action("actionSidebarTextChanged", (arg:{text:string}) => {
    SidebarStore.set("text", arg.text);
    try {
       AppStore.set("netStatus", "net-dirty");
@@ -45,7 +45,7 @@ actionUpdateDownloaded.add((arg) => {
    }
 });
 
-export const actionSetCompactMode = Action("setSidebarCompactMode", (arg:{compact:boolean}) => {
+export const actionSetCompactMode = Action("actionSetCompactMode", (arg:{compact:boolean}) => {
    SidebarStore.set("compactMode", arg.compact);
    localStorage.setItem("compactMode", arg.compact ? "true" : "false");
 });

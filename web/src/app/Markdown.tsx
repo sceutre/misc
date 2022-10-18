@@ -5,12 +5,12 @@ import {actionTextChanged, actionTextEditingDone, actionToggleContentCheckbox, M
 import {TextArea} from "./TextArea.js";
 
 export const Markdown = () => {
-   let {isEditing} = useStore(MarkdownStore, ["isEditing"]);
-   return isEditing ? <MarkdownEdit/> : <MarkdownDisplay/>;
+   let {isEditing, html, text} = useStore(MarkdownStore, ["isEditing", "html", "text"]);
+   return isEditing ? <MarkdownEdit text={text} /> : <MarkdownDisplay html={html}/>;
 };
 
-const MarkdownDisplay = () => {
-   let {text, html} = useStore(MarkdownStore, ["text", "html"]);
+const MarkdownDisplay = (props:{html:string}) => {
+   let {html} = props;
    return (<div className="main markdown-display">
       <div className="main-title">{path().replace(/[_]/g, " ")}</div>
       <div className="markdown-body" dangerouslySetInnerHTML={{__html: html}} onClick={onClick}></div>
@@ -28,8 +28,8 @@ const MarkdownDisplay = () => {
    }
 };
 
-const MarkdownEdit = () => {
-   let {text} = useStore(MarkdownStore, ["text"])
+const MarkdownEdit = (props:{text:string}) => {
+   let {text} = props;
    return (<div className="main edit markdown-edit">
       <div className="main-title">{path()}</div>
       <TextArea onChange={actionTextChanged} value={text} onSave={actionTextEditingDone}/>

@@ -92,7 +92,7 @@ $(ASSETS): $(shell find web/assets -type f)
 
 $(DEP_FILES): $(BUILD_DIR)/%.d: ;
 
-install: clean release
+install: release
 	@rm -rf $(INSTALL_DIR)/misc.exe $(INSTALL_DIR)/srcroot
 	@rm $(BIN_DIR)/srcroot/dev/node_modules
 	@cp -R $(BIN_DIR)/misc.exe $(BIN_DIR)/srcroot $(INSTALL_DIR)

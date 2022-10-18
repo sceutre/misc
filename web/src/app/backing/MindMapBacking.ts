@@ -103,7 +103,7 @@ GLOBAL_KEY_HANDLERS.push((ev) => {
    if (AppStore.data.content.type == "mindmap") mindMapOnKey(ev);
 })
 
-export const actionMindAddKid = Action("mindAddKid", (arg:{parentId:number, afterId:number}) => {
+export const actionMindAddKid = Action("actionMindAddKid", (arg:{parentId:number, afterId:number}) => {
    let parent = getNode(arg.parentId);
    let node = newMapNode("", MindMapStore.data.maxId + 1, parent);
    MindMapStore.update(x => {
@@ -121,7 +121,7 @@ export const actionMindAddKid = Action("mindAddKid", (arg:{parentId:number, afte
    });
 });
 
-export const actionMindDelete = Action("mindDelete", (arg:{id:number}) => {
+export const actionMindDelete = Action("actionMindDelete", (arg:{id:number}) => {
    if (arg.id != ROOT_ID && MindMapStore.data.$kids[arg.id].length == 0) {
       let node = getNode(arg.id);
       MindMapStore.update(x => {
@@ -137,7 +137,7 @@ export const actionMindDelete = Action("mindDelete", (arg:{id:number}) => {
    }
 });
 
-export const actionMindSetOrigin = Action("mindSetOrigin", (d:{x:number, y:number}) => {
+export const actionMindSetOrigin = Action("actionMindSetOrigin", (d:{x:number, y:number}) => {
    MindMapStore.update(x => {
       x.originX = d.x;
       x.originY = d.y;
@@ -145,7 +145,7 @@ export const actionMindSetOrigin = Action("mindSetOrigin", (d:{x:number, y:numbe
    })
 });
 
-export const actionMindSelectNode = Action("mindSelectNode", (d:{id:number}) => {
+export const actionMindSelectNode = Action("actionMindSelectNode", (d:{id:number}) => {
    if (MindMapStore.data.selectedId == d.id) return;
    MindMapStore.update(x => {
       x.selectedId = d.id;
@@ -158,11 +158,11 @@ export const actionMindSelectNode = Action("mindSelectNode", (d:{id:number}) => 
    })
 });
 
-export const actionMindSetCursorIx = Action("mindSetCursor", (d:{ix:number}) => {
+export const actionMindSetCursorIx = Action("actionMindSetCursorIx", (d:{ix:number}) => {
    MindMapStore.set("cursorIx", d.ix);
 });
 
-export const actionMindUpdateLabel = Action("mindUpdateLabel", (d:{id:number, label:string, cursorIx:number}) => {
+export const actionMindUpdateLabel = Action("actionMindUpdateLabel", (d:{id:number, label:string, cursorIx:number}) => {
    MindMapStore.update(x => {
       let node = getNode(d.id);
       node = Object.assign({}, node, {text: d.label});

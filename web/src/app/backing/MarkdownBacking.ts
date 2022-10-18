@@ -10,12 +10,12 @@ export const MarkdownStore = new Store("MarkdownStore", {
    isEditing: false 
 });
 
-export const actionTextChanged = Action("setEditingText", (arg:{text:string}) => {
+export const actionTextChanged = Action("actionTextChanged", (arg:{text:string}) => {
    MarkdownStore.set("text", arg.text);
    appSave({type: "markdown", text: arg.text });
 });
 
-export const actionTextEditingDone = Action<void>("textEditingDone", () => {
+export const actionTextEditingDone = Action<void>("actionTextEditingDone", () => {
    if (AppStore.data.netStatus == "net-clean") {
       log$(transformMarkdownToHTML());
    } else if (AppStore.data.netStatus == "net-waiting") {
@@ -26,18 +26,18 @@ export const actionTextEditingDone = Action<void>("textEditingDone", () => {
    }
 });
 
-export const actionTextEditingStart = Action<void>("textEditingStart", () => {
+export const actionTextEditingStart = Action<void>("actionTextEditingStart", () => {
    MarkdownStore.set("isEditing", true);
 })
 
-export const actionShowMarkdown = Action("showMarkdown", (arg: {html:string}) => {
+export const actionShowMarkdown = Action("actionShowMarkdown", (arg: {html:string}) => {
    MarkdownStore.update(x => {
       x.isEditing = false;
       x.html = arg.html;
    });
 })
 
-export const actionToggleContentCheckbox = Action("toggleChecked", (arg:{index:number}) => {
+export const actionToggleContentCheckbox = Action("actionToggleContentCheckbox", (arg:{index:number}) => {
    let ix = arg.index;
    let lines = MarkdownStore.data.text.split("\n");
    for (let i=0; i < lines.length; i++) {
@@ -79,7 +79,7 @@ actionUpdateDownloaded.add((arg) => {
 });
 
 async function transformMarkdownToHTML(text?:string) {
-   await wait(0);
+   await wait(1);
    if (typeof text == "undefined" && AppStore.data.content.type == "markdown") { text = AppStore.data.content.text; }
    if (text) {
       actionShowMarkdown({html: markedExtToHtml(text)})
