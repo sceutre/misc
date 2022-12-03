@@ -12,14 +12,16 @@ interface TableData {
 interface MarkedExtData {
    checkboxIx:number;
    tableData:TableData|null;
-   inColumns:boolean;
+   colsNumTotal:number;
+   colsNumSeen:number;
    init:boolean;
 }
 
 const extData:MarkedExtData = {
    checkboxIx:0,
    tableData:null,
-   inColumns:false,
+   colsNumTotal:0,
+   colsNumSeen: 0,
    init:false
 };
 
@@ -73,11 +75,20 @@ const wikiExt = {
 export function markedExtToHtml(text:string) {
    init();
    extData.checkboxIx = 0;
-   extData.inColumns = false;
+   extData.colsNumSeen = 0;
+   extData.colsNumTotal = 0;
    extData.tableData = null;
    let s = marked(text);
-   if (extData.inColumns) {
+   while (extData.colsNumTotal > 0) {
       s += "\n</div>\n";
+      extData.colsNumSeen++;
+      if (extData.colsNumSeen == extData.colsNumTotal) {
+         extData.colsNumTotal = extData.colsNumSeen = 0;
+         s += "\n</div>\n";
+         break;
+      } else {
+         s += '<div style="flex:1;">'
+      }
    }
    return s;
 }
@@ -141,24 +152,33 @@ function init() {
             html(htmlText) {
                let h = htmlText.trim();
                if (h.startsWith("<column")) {
-                  let parts = h.substring(1, h.length - 1).split("-");
-                  let arg = parts.length == 1 ? "1" : parts[1].trim();
-                  if (arg == "end") {
-                     if (extData.inColumns) {
-                        extData.inColumns = false;
-                        return "</div></div>";
-                     }
-                     return "";
-                  }
+                  let args = parseMyHtml(h);
                   let s = "";
-                  if (extData.inColumns) {
-                     s += '</div>';
+                  if (extData.colsNumTotal == 0) {
+                     let gap = typeof args["gap"] == "undefined" ? "50px" : args["gap"] + "px";
+                     let width = (args["width"] ? args["width"] : "1");
+                     s += `<div style="display:flex;gap:${gap}"><div style="flex:${width};">\n`;
+                     let num = typeof args["number"] == "undefined" ? 2 : +args["number"];
+                     extData.colsNumTotal = num;
+                     extData.colsNumSeen = 1;
+                  } else if (extData.colsNumSeen < extData.colsNumTotal) {
+                     let width = (args["width"] ? args["width"] : "1");
+                     s += `</div><div style="flex:${width};">`
+                     extData.colsNumSeen++;
                   } else {
-                     extData.inColumns = true;
-                     s += '<div style="display:flex;">\n';
+                     extData.colsNumSeen = 0;
+                     extData.colsNumTotal = 0;
+                     s += "</div></div>";
                   }
-                  s += '<div style="flex:' + arg + ';">';
                   return s;
+               }
+               if (h.startsWith("<numberformat")) {
+                  let args = parseMyHtml(h);
+                  if (typeof args["commas"] != "undefined") NUMBER_FORMAT.commas = args["commas"] == "true";
+                  if (typeof args["decimals"] != "undefined") NUMBER_FORMAT.decimals = +args["decimals"]
+                  if (typeof args["negbrackets"] != "undefined") NUMBER_FORMAT.negbrackets = args["negbrackets"] == "true";
+                  if (typeof args["prefix"] != "undefined") NUMBER_FORMAT.prefix = args["prefix"].replace("dollar", "$");
+                  return "";
                }
                return htmlText;
             }
@@ -226,19 +246,58 @@ function spreadsheetify() {
          values[i][j] = obj.error ? obj.error : obj.result;
          tableData!.rows[i][j] = formatValue(values[i][j]);
       } else {
-         values[i][j] = convertValue(s);
+         let commaless = s.replace(",", "");
+         if (commaless.match(/^\d*\.?\d*$/)) {
+            values[i][j] = parseFloat(commaless);
+            tableData!.rows[i][j] = formatValue(values[i][j]);
+         } else {
+            values[i][j] = s;
+         }
+
       }
       return values[i][j];
    }
 
    function convertValue(s:string) {
-      if (s.match(/^\d*\.?\d*$/)) {
-         return parseFloat(s);
+      let commaless = s.replace(",", "");
+      if (commaless.match(/^\d*\.?\d*$/)) {
+         return parseFloat(commaless);
       }
       return s;
    }
 
    function formatValue(val:any) {
+      if (typeof val == "number") {
+         let numstr = Number(Math.abs(val)).toFixed(NUMBER_FORMAT.decimals);
+         if (NUMBER_FORMAT.commas) {
+            numstr = numstr.replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",");
+         }
+         numstr = NUMBER_FORMAT.prefix + numstr;
+         if (val < 0) {
+            if (NUMBER_FORMAT.negbrackets) {
+               numstr = "(" + numstr +")";
+            } else {
+               numstr = "-" + numstr;
+            }
+         }
+         return numstr;
+      }
       return "" + val;
    }
+}
+
+const NUMBER_FORMAT = {
+   commas: true,
+   decimals: 0,
+   negbrackets: true,
+   prefix: ""
+}
+
+function parseMyHtml(html:string) {
+   let parts = html.substring(1, html.length-1).split("-");
+   let results:{[k:string] : string} = {};
+   for (let i = 1; i+1 < parts.length; i += 2) {
+      results[parts[i]] = parts[i+1];
+   }
+   return results;
 }
