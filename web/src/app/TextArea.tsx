@@ -1,4 +1,4 @@
-import * as React from "react";
+import {useRef} from "preact/hooks";
 import {Action} from "../utils/flux.js";
 
 interface TextAreaProps {
@@ -73,8 +73,8 @@ interface History {
 type ApplyType = "override" | "default" | "undo" | "redo";
 
 export function TextArea(props:TextAreaProps) {
-   const textArea = React.useRef<HTMLTextAreaElement>(null);
-   const history = React.useRef<History>({ states: [{text: props.value, beforeStart:0, beforeEnd: 0, afterStart: 0, afterEnd: 0}], ix: 0, sel1:0, sel2:0});
+   const textArea = useRef<HTMLTextAreaElement>(null);
+   const history = useRef<History>({ states: [{text: props.value, beforeStart:0, beforeEnd: 0, afterStart: 0, afterEnd: 0}], ix: 0, sel1:0, sel2:0});
    
    function applyEdits(text:string, selectionStart:number, selectionEnd:number, type:ApplyType) {
       props.onChange({text});
@@ -90,12 +90,13 @@ export function TextArea(props:TextAreaProps) {
       }
    }
 
-   function onKeyDown(e:React.KeyboardEvent<HTMLTextAreaElement>) {
+   function onKeyDown(e:KeyboardEvent) {
+      let target = e.currentTarget as HTMLTextAreaElement;
       if (e.keyCode === KEYCODE_ESCAPE) {
-         e.currentTarget.blur();
+         target.blur();
       }
-      history.current.sel1 = e.currentTarget.selectionStart;
-      history.current.sel2 = e.currentTarget.selectionEnd;
+      history.current.sel1 = target.selectionStart;
+      history.current.sel2 = target.selectionEnd;
       if (isWindows) {
          if (e.keyCode === KEYCODE_TAB) doTab(e);
          else if (e.keyCode === KEYCODE_Z && e.ctrlKey && !e.altKey && !e.shiftKey) doUndo(e);
@@ -117,7 +118,7 @@ export function TextArea(props:TextAreaProps) {
       }
    }
 
-   function doUndo(e:React.KeyboardEvent<HTMLTextAreaElement>) {
+   function doUndo(e:KeyboardEvent) {
       e.preventDefault();
       const { ix, states } = history.current;
       if (ix > 0) {
@@ -128,7 +129,7 @@ export function TextArea(props:TextAreaProps) {
       }
    }
 
-   function doRedo(e:React.KeyboardEvent<HTMLTextAreaElement>) {
+   function doRedo(e:KeyboardEvent) {
       e.preventDefault();
       const { ix, states } = history.current;
       if (ix < states.length - 1) {
@@ -138,8 +139,8 @@ export function TextArea(props:TextAreaProps) {
       }
    }
 
-   function doDeleteLine(e:React.KeyboardEvent<HTMLTextAreaElement>) {
-      const { selectionStart, selectionEnd } = e.currentTarget;
+   function doDeleteLine(e:KeyboardEvent) {
+      const { selectionStart, selectionEnd } = e.currentTarget as HTMLTextAreaElement;
       if (selectionStart == selectionEnd) {
          e.preventDefault();
          let s = props.value;
@@ -153,9 +154,9 @@ export function TextArea(props:TextAreaProps) {
       }
    }
 
-   function doTab(e:React.KeyboardEvent<HTMLTextAreaElement>) {
+   function doTab(e:KeyboardEvent) {
       e.preventDefault();
-      const { selectionStart, selectionEnd } = e.currentTarget;
+      const { selectionStart, selectionEnd } = e.currentTarget as HTMLTextAreaElement;
       let s = props.value;
       let lines = lineStarts(s, selectionStart, selectionEnd);
       let lineIx = selectionStart - lines[0];
@@ -184,7 +185,7 @@ export function TextArea(props:TextAreaProps) {
       }
    }
 
-   function doSave(e:React.KeyboardEvent<HTMLTextAreaElement>) {
+   function doSave(e:KeyboardEvent) {
       e.preventDefault();
       props.onSave?.();
    }

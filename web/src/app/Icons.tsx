@@ -1,4 +1,3 @@
-import * as React from "react";
 import {useStore} from "../utils/flux.js";
 import {SidebarStore} from "./backing/SidebarBacking.js";
 

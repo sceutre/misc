@@ -1,8 +1,10 @@
-import * as React from "react";
+import { ComponentType, Component, RefObject } from "preact";
+import { useEffect, useState, useReducer, useLayoutEffect } from "preact/hooks"
 
 export type Fn<T = any, V = any> = (arg: T) => V;
 type FnId<T = any, V = any> = Fn<T,V> & { id: number };
-type ConnectableComponent<DerivedProps, InlineProps> = React.ComponentType<DerivedProps & InlineProps> & {getDerivedProps: (props:InlineProps) => DerivedProps, stores: Store<any>[]}
+type ConnectableComponent<DerivedProps, InlineProps> = 
+      ComponentType<DerivedProps & InlineProps> & {getDerivedProps: (props:InlineProps) => DerivedProps, stores: Store<any>[]}
 
 export type LoggerFn = (action: string, data: any) => void;
 
@@ -227,25 +229,24 @@ export class StoreCollection<T> {
 }
 
 
-export function connect<DerivedProps, InlineProps={}>(Component: ConnectableComponent<DerivedProps, InlineProps>) {
+export function connect<DerivedProps, InlineProps={}>(TheComponent: ConnectableComponent<DerivedProps, InlineProps>) {
 
-   const name = Component.displayName || Component.name || "Unnamed";
-   return class Connected extends React.Component<InlineProps> {
-
+   const name = TheComponent.displayName || Component.name || "Unnamed";
+   return class Connected extends Component<InlineProps> {
       static displayName = "c(" + name + ")";
 
       private currentDerivedProps:DerivedProps|undefined = undefined;
 
       componentWillMount() {
-         for (let s of Component.stores) s.addListener(this.storeChanged);
+         for (let s of TheComponent.stores) s.addListener(this.storeChanged);
       }
 
       componentWillUnmount() {
-         for (let s of Component.stores) s.removeListener(this.storeChanged);
+         for (let s of TheComponent.stores) s.removeListener(this.storeChanged);
       }
 
       shouldComponentUpdate(nextProps:InlineProps) {
-         let nextDerivedProps:DerivedProps = Component.getDerivedProps(nextProps);
+         let nextDerivedProps:DerivedProps = TheComponent.getDerivedProps(nextProps);
          let shouldUpdate = !eq(this.props, nextProps) || !eq(this.currentDerivedProps, nextDerivedProps);
          if (shouldUpdate) {
             this.currentDerivedProps = nextDerivedProps;
@@ -265,9 +266,9 @@ export function connect<DerivedProps, InlineProps={}>(Component: ConnectableComp
 
       render() {
          if (!this.currentDerivedProps) {
-            this.currentDerivedProps = Component.getDerivedProps(this.props);
+            this.currentDerivedProps = TheComponent.getDerivedProps(this.props);
          }
-         return <Component {...this.props} {...this.currentDerivedProps} />;
+         return <TheComponent {...this.props} {...this.currentDerivedProps} />;
       }
 
    }
@@ -281,23 +282,23 @@ export function useStore<T, V extends keyof T>(store:Store<T>, watchingOnly?:V[]
       let now = store.data;
       if (!watchingOnly) {
          if (!dispatcher.deferComponentNotification(forceUpdate)) {
-            forceUpdate();
+            forceUpdate(1);
          }
          return;
       }
       for (let k of watchingOnly) {
          if (now[k] !== old[k]) {
             if (!dispatcher.deferComponentNotification(forceUpdate)) {
-               forceUpdate();
+               forceUpdate(1);
             }
             return;
          }
       }
    }
 
-   const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0);
+   const [ignored, forceUpdate] = useReducer(x => x + 1, 0);
 
-   React.useEffect(() => {
+   useLayoutEffect(() => {
       store.addListener(storeChanged);
       return () => store.removeListener(storeChanged);
    }, []);
@@ -305,15 +306,15 @@ export function useStore<T, V extends keyof T>(store:Store<T>, watchingOnly?:V[]
    return store.data as Pick<T,V>|T;
 }
 
-export function useContainerDimensions(myRef: React.RefObject<any>) {
-   const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
+export function useContainerDimensions(myRef: RefObject<any>) {
+   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
    function handleResize() {
       setDimensions({
          width: (myRef && myRef.current && myRef.current.offsetWidth) || 0,
          height: (myRef && myRef.current && myRef.current.offsetHeight) || 0,
        })      
    }
-   React.useEffect(() => {
+   useEffect(() => {
       handleResize();
       window.addEventListener('resize', handleResize);
       return () => { window.removeEventListener('resize', handleResize);};

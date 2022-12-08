@@ -1,15 +1,15 @@
-import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { render } from "preact";
 import {App} from "./app/App.js";
 import {appBeginDownloader, GLOBAL_KEY_HANDLERS} from "./app/backing/AppBacking.js";
 import {dispatcher} from "./utils/flux.js";
 import {path} from "./utils/utils.js";
 
-if ((window as any).MDEV) 
+//if ((window as any).MDEV) 
    dispatcher.installActionLogging((action,data) => {
       console.log(action + " " + JSON.stringify(data));
    });
-ReactDOM.render(<App />, document.getElementById('react'));
+
+render(<App />, document.getElementById('react') as HTMLElement);
 appBeginDownloader();
 let p = path();
 let title = p == "Misc" ? p : "Misc - " + p;

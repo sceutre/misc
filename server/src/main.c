@@ -36,6 +36,10 @@ static char *normalizedPath(const char *dir, const char *subdir, char *file, con
    return t_printf("%s/%s%s%s%s", dir, subdir, file, ext ? "." : "", ext ? ext : "");
 }
 
+static char *rawPath(const char *dir, const char *subdir, char *file) {
+   return t_printf("%s/%s%s", dir, subdir, file);
+}
+
 static char *hPath(char *p, ...) {
    char SEP = win_fileSeperator();
    int len = strlen(p);
@@ -109,13 +113,21 @@ static bool wikiGet(HttpContext ctx, void *arg) {
 
 static bool wikiGetImg(HttpContext ctx, void *arg) {
    char *localPath = get_req(ctx, H_LOCALPATH);
-   char *exts[] = { "png", "jpg", "svg" };
-   char *mimes[] = { "image/png", "image/jpeg", "image/svg+xml" };
-   int i = getLatestFile(dataRoot, "img/", localPath, exts, 3);
-   char *filename = normalizedPath(dataRoot, "img/",  localPath, exts[i]);
+   char *filename = rawPath(dataRoot, "img/",  localPath);
    Bytearray input = bytearray_readfile(filename);
+   char *mime = mimeGet(filename);
    if (input) bytearray_append_all(ctx->responseBody, input->bytes, input->size);
-   http_response_headers(ctx, 200, false, mimes[i]);
+   http_response_headers(ctx, 200, false, mime);
+   http_send(ctx);
+   return true;
+}
+
+static bool wikiSaveImg(HttpContext ctx, void *arg) {
+   char *localPath = get_req(ctx, H_LOCALPATH);
+   char *filename = rawPath(dataRoot, "img/",  localPath);
+   bytearray_writefile(ctx->requestBody, filename);
+   http_response_headers(ctx, 200, false, "text/plain");
+   bytearray_append_all(ctx->responseBody, "Success", 7);
    http_send(ctx);
    return true;
 }
@@ -214,9 +226,10 @@ int main(int argc, char **argv) {
       } else {
          usageOnCatch = false;
          log_info("running on port %d, src={%s}, data={%s}, mode={%d}, localhost={%s}, ext={%s}", port, srcRoot, dataRoot, debugMode, localhost, externalFolders);
-         web_handler("wiki_get_img", "GET", "/img/", wikiGetImg, NULL);
          web_handler("wiki_get", "GET", "/-/md/", wikiGet, NULL);
          web_handler("wiki_save", "POST", "/-/md/", wikiSave, NULL);
+         web_handler("wiki_get_img", "GET", "/-/img/", wikiGetImg, NULL);
+         web_handler("wiki_save_img", "POST", "/-/img/", wikiSaveImg, NULL);
          log_trace("past web handlers");
          files_addDir("src_cached", "GET", "/-/src/prod/", hPath(srcRoot, "prod", NULL), true);
          files_addDir("src_uncached", "GET", "/-/src/", srcRoot, false);

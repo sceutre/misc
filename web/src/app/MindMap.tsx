@@ -2,7 +2,9 @@ import {actionMindAddKid, actionMindDelete, actionMindSelectNode, actionMindSetC
 import {AppStore} from "./backing/AppBacking.js";
 import {connect, useContainerDimensions} from "../utils/flux.js";
 import {divide} from "../utils/utils.js";
-import * as React from "react";
+import {memo, PureComponent} from "preact/compat";
+import {FunctionComponent} from "preact";
+import {useRef} from "preact/hooks";
 
 interface PropsInline {
    containerWidth:number;
@@ -20,7 +22,7 @@ interface PropsDerived {
    cursorIx: number;
 }
 
-class MindMapClass extends React.PureComponent<PropsDerived & PropsInline> {
+class MindMapClass extends PureComponent<PropsDerived & PropsInline> {
    static stores = [AppStore, MindMapStore];
 
    static getDerivedProps() {
@@ -90,8 +92,8 @@ class MindMapClass extends React.PureComponent<PropsDerived & PropsInline> {
 
 }
 
-const MindMapNode: React.SFC<{node: MapNode, isDark: boolean, isSelected: boolean, cursorIx: number, colors:Coloring}> = React.memo(({node, isDark, isSelected, cursorIx, colors}) => {
-   function onClick(ev: React.MouseEvent) {actionMindSelectNode({id: node.id}); ev.stopPropagation();}
+const MindMapNode: FunctionComponent<{node: MapNode, isDark: boolean, isSelected: boolean, cursorIx: number, colors:Coloring}> = memo(({node, isDark, isSelected, cursorIx, colors}) => {
+   function onClick(ev: MouseEvent) {actionMindSelectNode({id: node.id}); ev.stopPropagation();}
 
    let cx = colors;
    let c = isDark ? cx.dark : cx.normal;
@@ -118,7 +120,7 @@ const MindMapNode: React.SFC<{node: MapNode, isDark: boolean, isSelected: boolea
 const MindMapConnected = connect<PropsDerived, PropsInline>(MindMapClass);
 
 export function MindMap() {
-   const ref = React.useRef(null);
+   const ref = useRef(null);
    const {width, height} = useContainerDimensions(ref);
    return <div className="main mindmap" ref={ref}><MindMapConnected containerHeight={height} containerWidth={width}/></div>
 }

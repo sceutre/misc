@@ -35,6 +35,11 @@ OBJ_FILES := $(C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 DEP_FILES := $(C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.d)
 DIRS := $(BIN_DIR) $(patsubst $(SRC_DIR)%,$(BUILD_DIR)%,$(shell find $(SRC_DIR) -type d))
 
+esbuild := web/node_modules_dev/node_modules/.pnpm/node_modules/esbuild-windows-64/esbuild.exe
+tsc := ./node_modules_dev/node_modules/typescript/bin/tsc
+httpserver := ./node_modules_dev/node_modules/http-server/bin/http-server
+cleancss := ./node_modules_dev/node_modules/clean-css-cli/bin/cleancss
+
 .DEFAULT: all
 .PHONY: all, clean, run, dirs, fresh, debug, release, web, webwatch, install, css
 
@@ -72,16 +77,16 @@ run: all
 web: $(JS) $(CSS) $(ASSETS)
 
 webwatch: $(CSS) $(ASSETS) 
-	@cd web && ./node_modules/.bin/tsc -w
+	@cd web && $(tsc) -w
 
 $(JS): $(shell find web/src -name *.ts* -type f)
-	@cd web && ./node_modules/.bin/tsc
+	@cd web && $(tsc)
 	@printf "  \xE2\x9c\x93 tsc\n"
-	@cd .  && web/node_modules/.bin/esbuild $(BIN_DIR)/srcroot/dev/main.js --bundle --log-level=warning --outfile=$(BIN_DIR)/srcroot/prod/bundle.js
+	@cd .  && $(esbuild) $(BIN_DIR)/srcroot/dev/main.js --bundle --log-level=warning --outfile=$(BIN_DIR)/srcroot/prod/bundle.js
 	@printf "  \xE2\x9c\x93 $@\n"
 
 $(CSS): $(shell find web/src -name *.css -type f)
-	@cd web && node_modules/.bin/cleancss src/css/style.css  --skip-rebase -o ../bin/srcroot/prod/bundle.css
+	@cd web && $(cleancss) src/css/style.css  --skip-rebase -o ../bin/srcroot/prod/bundle.css
 	@printf "  \xE2\x9c\x93 $@\n"
 
 $(ASSETS): $(shell find web/assets -type f)

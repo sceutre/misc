@@ -1,4 +1,3 @@
-import * as React from "react";
 import {useStore} from "../utils/flux.js";
 import {path} from "../utils/utils.js";
 import {actionToggleDark, AppStore, toDrawing, toMarkdown, toMindMap} from "./backing/AppBacking.js";
@@ -49,6 +48,14 @@ export function SidebarEdit() {
 function IconLabel(props:{icon:Icon, compact:boolean}) {
    const {opacity = 1, label, action, image} = props.icon;
 
+   if (action == "$upload") {
+      return (
+         <label className="iconlabel" style={{opacity: opacity}}>
+            <input type="file" style={{display:"none"}} onChange={onChange}/>
+            <img src={image}/>{!props.compact && <span>{label}</span>}
+         </label>
+      );
+   }
    return <div className={action =="$none" ? "iconlabelnoaction" : "iconlabel"} onClick={onClick} style={{opacity: opacity}}>
       <img src={image}/>{!props.compact && <span>{label}</span>}
    </div>;
@@ -77,11 +84,18 @@ function IconLabel(props:{icon:Icon, compact:boolean}) {
                break;
             case "$none":
                break;
+            case "$upload":
+                  break;
             default: 
                window.location.href = action; 
                break;
          }
+
       }
+   }
+   function onChange(arg:any) {
+      let file = arg.target.files[0] as File;
+      console.log(file);
    }
 }
 

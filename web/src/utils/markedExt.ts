@@ -49,26 +49,55 @@ const emojiExt = {
    }
 };
 
+// [[LinkPage|some link text]] -> <a href=LinkPage>some link text</a>
+// [[image.png]] -> <img src=image.png> 
+// [[image.png|100x200]] -> <img src=image.png width=100 height=200>
+// [[image.png|100x?]] -> <img src=image.png width=100>
+// [[image.png|?x200]] -> <img src=image.png height=200>
+// [[image.png|50%]] -> <img src=image.png width="50%">
+ 
 const wikiExt = {
    name: 'wikilinks',
-   level: 'inline',                         // This is an inline-level tokenizer
+   level: 'inline',                               // This is an inline-level tokenizer
    start(src: string) {return src.indexOf('[');}, // Hint to Marked.js to stop and check for a match
    tokenizer(src: string, tokens: any[]) {
       const match = extRules.wikilinks.exec(src);
       if (match) {
          let link = match[1];
          let array = link.split("|");
-         let linkTitle = array[0];
-         let pageName = array.length > 1 ? array[1] : array[0];
-         return {                             // Token to generate
+         let pageName = array[0].trim();
+         let linkTitle = array.length > 1 ? array[1].trim() : pageName;
+         let ext = "";
+         let ix = pageName.lastIndexOf(".");
+         if (ix > 0) {
+            let ix2 = pageName.indexOf(" ", ix);
+            if (ix2 < 0) ext = pageName.substring(ix+1);
+         }
+         return {                              // Token to generate
             type: 'wikilinks',                 // Should match "name" above
             raw: match[0],                     // Text to consume from the source
-            linkTitle, pageName                // Additional custom properties
+            linkTitle, pageName, ext           // Additional custom properties
          };
       }
    },
    renderer(token: any) {
-      return `<a href="${token.pageName}">${token.linkTitle}</a>`;
+      let ext = token.ext.toLowerCase();
+      let pageName = token.pageName;
+      let linkTitle = token.linkTitle;
+      if (ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "gif" || ext == "svg") {
+         let w = ""; let h = "";
+         if (pageName !== linkTitle) {
+            let parts = linkTitle.split("x");
+            if (parts.length == 2) {
+               w = parts[0] == "?" ? "" : ("width="+parts[0]);
+               h = parts[1] == "?" ? "" : ("height="+parts[1]);
+            } else if (parts.length == 1 && parts[0].endsWith("%")) {
+               w = "width=\"" + parts[0] + "\"";
+            }
+         }
+         return `<img src="/-/img/${pageName}" ${w} ${h}>`;
+      }
+      return `<a href="${pageName}">${linkTitle}</a>`;
    }
 };
 

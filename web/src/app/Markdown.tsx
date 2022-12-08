@@ -1,4 +1,3 @@
-import * as React from "react";
 import {useStore} from "../utils/flux.js";
 import {path} from "../utils/utils.js";
 import {actionTextChanged, actionTextEditingDone, actionToggleContentCheckbox, MarkdownStore} from "./backing/MarkdownBacking.js";

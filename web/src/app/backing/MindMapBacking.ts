@@ -449,7 +449,7 @@ function deepEq(payload: MindMapExportData, exp: MindMapExportData) {
    return stableStringify(payload) == stableStringify(exp);
 }
 
-export function mindMapOnKey(ev:React.KeyboardEvent|KeyboardEvent) {
+export function mindMapOnKey(ev:KeyboardEvent) {
    let {selectedId, cursorIx} = MindMapStore.data;
    let k = getKey(ev);
    if (selectedId <= 0 && (k == "Enter" || k.indexOf("Arrow") >= 0)) {
