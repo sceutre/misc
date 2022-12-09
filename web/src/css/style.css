@@ -249,3 +249,13 @@
  .cursor:before {
    content: " ";
 }
+
+
+@media print {
+   .sidebar {
+      display: none;
+   }
+   #react {
+      position: unset;
+   }
+}

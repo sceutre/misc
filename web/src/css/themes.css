@@ -36,6 +36,7 @@
    --mmap-edit-bg: hsl(37, 7%, 76%);
 
 }
+@media screen {
 .dark {
    --sidebar-bg:             hsl(38, 20%, 30%);
    --sidebar-hover-bg:       hsl(38, 20%, 35%);
@@ -74,4 +75,4 @@
    --mmap-edit-bg: hsl(37, 7%, 24%);
 
 }
-
+}
