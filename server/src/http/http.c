@@ -169,7 +169,7 @@ static void callback(HttpContext ctx, bool isDone) {
    ((HttpCallbackFn)(ctx->callback))(ctx, isDone);
 }
 
-#define MAX_BODY_SIZE 1000000
+#define MAX_BODY_SIZE 10000000
 
 static int readFixedLength(HttpContext ctx, int n, int soFar) {
    if (soFar == 0) bytearray_reset(ctx->requestBody);

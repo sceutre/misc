@@ -141,6 +141,18 @@ function appSaveImpl(content:Content) {
    }
 }
 
+export function appSaveImg(img:ArrayBuffer, filename:string) {
+   log$(save());
+
+   async function save() {
+      AppStore.set("netStatus", "net-waiting");
+      let resp = await fetch("-/img/" + filename, { method: "POST", body: img });
+      if (resp.ok) {
+         actionSaved();
+      }
+   }
+}
+
 function toObject(text:string):Content {
    let t = text.trim();
    if (t.startsWith("{") && t.endsWith("}")) return JSON.parse(text);

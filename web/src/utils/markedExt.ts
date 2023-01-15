@@ -12,16 +12,14 @@ interface TableData {
 interface MarkedExtData {
    checkboxIx:number;
    tableData:TableData|null;
-   colsNumTotal:number;
-   colsNumSeen:number;
+   inColumns:boolean;
    init:boolean;
 }
 
 const extData:MarkedExtData = {
    checkboxIx:0,
    tableData:null,
-   colsNumTotal:0,
-   colsNumSeen: 0,
+   inColumns:false,
    init:false
 };
 
@@ -104,20 +102,12 @@ const wikiExt = {
 export function markedExtToHtml(text:string) {
    init();
    extData.checkboxIx = 0;
-   extData.colsNumSeen = 0;
-   extData.colsNumTotal = 0;
+   extData.inColumns = false;
    extData.tableData = null;
    let s = marked(text);
-   while (extData.colsNumTotal > 0) {
-      s += "\n</div>\n";
-      extData.colsNumSeen++;
-      if (extData.colsNumSeen == extData.colsNumTotal) {
-         extData.colsNumTotal = extData.colsNumSeen = 0;
-         s += "\n</div>\n";
-         break;
-      } else {
-         s += '<div style="flex:1;">'
-      }
+   if (extData.inColumns) {
+      s += "\n</div></div>\n";
+      extData.inColumns = false;
    }
    return s;
 }
@@ -180,24 +170,21 @@ function init() {
             },
             html(htmlText) {
                let h = htmlText.trim();
+               if ((h.startsWith("<column-end") || h.startsWith("<column-off") || h.startsWith("</column")) && extData.inColumns) {
+                  extData.inColumns = false;
+                  return "\n</div></div>\n";
+               }
                if (h.startsWith("<column")) {
                   let args = parseMyHtml(h);
                   let s = "";
-                  if (extData.colsNumTotal == 0) {
+                  if (!extData.inColumns) {
                      let gap = typeof args["gap"] == "undefined" ? "50px" : args["gap"] + "px";
                      let width = (args["width"] ? args["width"] : "1");
                      s += `<div style="display:flex;gap:${gap}"><div style="flex:${width};">\n`;
-                     let num = typeof args["number"] == "undefined" ? 2 : +args["number"];
-                     extData.colsNumTotal = num;
-                     extData.colsNumSeen = 1;
-                  } else if (extData.colsNumSeen < extData.colsNumTotal) {
+                     extData.inColumns = true;
+                  } else {
                      let width = (args["width"] ? args["width"] : "1");
                      s += `</div><div style="flex:${width};">`
-                     extData.colsNumSeen++;
-                  } else {
-                     extData.colsNumSeen = 0;
-                     extData.colsNumTotal = 0;
-                     s += "</div></div>";
                   }
                   return s;
                }

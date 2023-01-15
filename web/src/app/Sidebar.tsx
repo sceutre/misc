@@ -1,6 +1,6 @@
 import {useStore} from "../utils/flux.js";
 import {path} from "../utils/utils.js";
-import {actionToggleDark, AppStore, toDrawing, toMarkdown, toMindMap} from "./backing/AppBacking.js";
+import {actionToggleDark, appSaveImg, AppStore, toDrawing, toMarkdown, toMindMap} from "./backing/AppBacking.js";
 import {actionTextEditingDone, actionTextEditingStart, MarkdownStore} from "./backing/MarkdownBacking.js";
 import {MindMapStore} from "./backing/MindMapBacking.js";
 import {actionSetCompactMode, actionSidebarTextChanged, Icon, isHtmlChunk, SidebarStore} from "./backing/SidebarBacking.js";
@@ -95,7 +95,9 @@ function IconLabel(props:{icon:Icon, compact:boolean}) {
    }
    function onChange(arg:any) {
       let file = arg.target.files[0] as File;
-      console.log(file);
+      file.arrayBuffer().then(b => {
+         appSaveImg(b, file.name);
+      });
    }
 }
 
