@@ -53,7 +53,20 @@ const emojiExt = {
 // [[image.png|100x?]] -> <img src=image.png width=100>
 // [[image.png|?x200]] -> <img src=image.png height=200>
 // [[image.png|50%]] -> <img src=image.png width="50%">
- 
+
+if (!(window as any).myzoom) {
+   (window as any).myzoom = function (ev:any) {
+      if (ev.dataset.zoomed && ev.dataset.zoomed == "true") {
+         ev.dataset.zoomed = "false";
+         ev.style.width = ev.dataset.owidth || "auto";
+         ev.style.height = ev.dataset.oheight || "auto";
+      } else {
+         ev.dataset.zoomed = "true";
+         ev.style.width = "100%";
+         ev.style.height = "auto";
+      }
+   }
+}
 const wikiExt = {
    name: 'wikilinks',
    level: 'inline',                               // This is an inline-level tokenizer
@@ -87,13 +100,13 @@ const wikiExt = {
          if (pageName !== linkTitle) {
             let parts = linkTitle.split("x");
             if (parts.length == 2) {
-               w = parts[0] == "?" ? "" : ("width="+parts[0]);
-               h = parts[1] == "?" ? "" : ("height="+parts[1]);
+               w = parts[0] == "?" ? "" : `width="${parts[0]}" data-owidth="${parts[0]}px"`;
+               h = parts[1] == "?" ? "" : `height="${parts[1]}" data-oheight="${parts[1]}px"`;
             } else if (parts.length == 1 && parts[0].endsWith("%")) {
-               w = "width=\"" + parts[0] + "\"";
+               w = `width="${parts[0]}" data-owidth="${parts[0]}"`;
             }
          }
-         return `<img src="/-/img/${pageName}" ${w} ${h}>`;
+         return `<img src="/-/img/${pageName}" ${w} ${h} onclick="window.myzoom(this)" style="cursor: pointer;">`;
       }
       return `<a href="${pageName}">${linkTitle}</a>`;
    }
