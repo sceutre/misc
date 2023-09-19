@@ -93,7 +93,7 @@ const wikiExt = {
                w = "width=\"" + parts[0] + "\"";
             }
          }
-         return `<img src="/-/img/${pageName}" ${w} ${h}>`;
+         return `<a href="/-/img/${pageName}"><img src="/-/img/${pageName}" ${w} ${h}></a>`;
       }
       return `<a href="${pageName}">${linkTitle}</a>`;
    }

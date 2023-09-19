@@ -72,10 +72,13 @@ interface History {
 
 type ApplyType = "override" | "default" | "undo" | "redo";
 
+let prevScrollPos = 0;
+let scrollCorrection = false;
+
 export function TextArea(props:TextAreaProps) {
    const textArea = useRef<HTMLTextAreaElement>(null);
    const history = useRef<History>({ states: [{text: props.value, beforeStart:0, beforeEnd: 0, afterStart: 0, afterEnd: 0}], ix: 0, sel1:0, sel2:0});
-   
+
    function applyEdits(text:string, selectionStart:number, selectionEnd:number, type:ApplyType) {
       props.onChange({text});
       if (type != "default" && textArea.current) {
@@ -194,5 +197,25 @@ export function TextArea(props:TextAreaProps) {
       applyEdits(e.currentTarget.value, e.currentTarget.selectionStart, e.currentTarget.selectionEnd, "default");
    }
 
-   return <textarea ref={textArea} onKeyDown={onKeyDown} onChange={onChange} value={props.value} />;
+
+   function onScroll() {
+      //console.log("SRF onScroll1 " + scrollCorrection + "/" + prevScrollPos + "/" + textArea.current?.scrollTop);
+      if (textArea.current) {
+         if (scrollCorrection) {
+            scrollCorrection = false;
+            textArea.current.scrollTop = prevScrollPos;
+            //console.log("SRF onScroll2 " + scrollCorrection + "/" + prevScrollPos + "/" + textArea.current?.scrollTop);
+         } else {
+            prevScrollPos = textArea.current.scrollTop;
+            //console.log("SRF onScroll3 " + scrollCorrection + "/" + prevScrollPos + "/" + textArea.current?.scrollTop);
+         }
+      }
+   }
+
+   function onInput() {
+      //console.log("SRF onInputa " + scrollCorrection + "/" + prevScrollPos + "/" + textArea.current?.scrollTop);
+      scrollCorrection = true;
+   }
+
+   return <textarea ref={textArea} onKeyDown={onKeyDown} onChange={onChange} onInput={onInput} onScroll={onScroll} value={props.value} />;
  }

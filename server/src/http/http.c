@@ -112,10 +112,10 @@ static char *upTo(HttpContext ctx, char delim) {
 
 static bool peekEOF(HttpContext ctx) {
    if (ctx->undoChar != 0) return false;
-   char c = socket_read(ctx->socket);
-   if (c == READ_EOF) return true;
-   if (c == READ_ERROR) throw("read error");
-   ctx->undoChar = c;
+   SocketReadResult rc = socket_read(ctx->socket);
+   if (rc.error == READ_EOF) return true;
+   if (rc.error == READ_ERROR) throw("read error");
+   ctx->undoChar = rc.c;
    return false;
 }
 
@@ -125,10 +125,10 @@ static char next(HttpContext ctx) {
       ctx->undoChar = 0;
       return c;
    }
-   c = socket_read(ctx->socket);
-   if (c == READ_ERROR) throw("read error");
-   if (c == READ_EOF) throw("unexpected eof");
-   return c;
+   SocketReadResult rc = socket_read(ctx->socket);
+   if (rc.error == READ_ERROR) throw("read error");
+   if (rc.error == READ_EOF) throw("unexpected eof");
+   return rc.c;
 }
 
 static char *upToEndOfLine(HttpContext ctx) {
