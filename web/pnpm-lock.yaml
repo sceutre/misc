@@ -1,12 +1,18 @@
 lockfileVersion: 5.4
 
 specifiers:
+  immer: 10.0.2
   preact: 10.11.2
 
 dependencies:
+  immer: 10.0.2
   preact: 10.11.2
 
 packages:
+
+  /immer/10.0.2:
+    resolution: {integrity: sha512-Rx3CqeqQ19sxUtYV9CU911Vhy8/721wRFnJv3REVGWUmoAcIwzifTsdmJte/MV+0/XpM35LZdQMBGkRIoLPwQA==}
+    dev: false
 
   /preact/10.11.2:
     resolution: {integrity: sha512-skAwGDFmgxhq1DCBHke/9e12ewkhc7WYwjuhHB8HHS8zkdtITXLRmUMTeol2ldxvLwYtwbFeifZ9uDDWuyL4Iw==}

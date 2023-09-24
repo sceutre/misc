@@ -13,7 +13,7 @@ Map mimeTypes = NULL;
 
 void mimeInit() {
    mimeTypes = map_new_ex(true, 64);
-   put("aac", "audio/aac");
+   put(".aac", "audio/aac");
    put(".bmp", "image/bmp");
    put(".css", "text/css");
    put(".csv", "text/csv");
@@ -45,6 +45,9 @@ void mimeInit() {
    put(".woff2", "font/woff2");
    put(".xhtml", "application/xhtml+xml");
    put(".zip", "application/zip");
+   // app specific
+   put(".draw", "application/json");
+   put(".md", "text/plain");
 }
 
 char *mimeGet(char *name) {

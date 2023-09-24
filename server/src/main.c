@@ -74,39 +74,13 @@ static char *hPath(char *p, ...) {
    return res;
 }
 
-static void saveMD(const char *text, unsigned int size, void *userdata) {
-   HttpContext ctx = userdata;
-   bytearray_append_all(ctx->responseBody, text, size);
-}
-
-static int getLatestFile(char *dir, char *subdir, char *name, char *exts[], int N) {
-   struct stat statInfo;
-   time_t maxTime = 0;
-   int err, maxI = N - 1;
-   for (int i = 0; i < N; i++) {
-      if (i == N-1 && maxTime == 0) 
-         break;
-      char *p = normalizedPath(dir, subdir, name, exts[i]);
-      log_trace("checking %s", p);
-      err = stat(p, &statInfo);
-      if (err == 0 && statInfo.st_mtime > maxTime) {
-         maxTime = statInfo.st_mtime;
-         maxI = i;
-         log_trace("tm %ld", maxTime);
-      }
-   }
-   return maxI;
-}
-
 static bool wikiGet(HttpContext ctx, void *arg) {
    char *localPath = get_req(ctx, H_LOCALPATH);
-   char *exts[] = { "json", "md" };
-   char *mimes[] = { "application/json", "text/plain" };
-   int i = getLatestFile(dataRoot, "", localPath, exts, 2);
-   char *filename = normalizedPath(dataRoot, "", localPath, exts[i]);
+   char *filename = normalizedPath(dataRoot, "", localPath, NULL);
    Bytearray input = bytearray_readfile(filename);
    if (input) bytearray_append_all(ctx->responseBody, input->bytes, input->size);
-   http_response_headers(ctx, 200, false, mimes[i]);
+   char *mime = mimeGet(filename);
+   http_response_headers(ctx, 200, false, mime);
    http_send(ctx);
    return true;
 }
@@ -134,11 +108,7 @@ static bool wikiSaveImg(HttpContext ctx, void *arg) {
 
 static bool wikiSave(HttpContext ctx, void *arg) {
    char *name = get_req(ctx, H_LOCALPATH);
-   char *ext = get_req(ctx, "MISC-Ext");
-   if (ext == NULL) {
-      ext = "md";
-   }
-   char *filename = normalizedPath(dataRoot, "", name, ext);
+   char *filename = normalizedPath(dataRoot, "", name, NULL);
    bytearray_writefile(ctx->requestBody, filename);
    http_response_headers(ctx, 200, false, "text/plain");
    bytearray_append_all(ctx->responseBody, "Success", 7);
@@ -155,32 +125,12 @@ static void usage() {
        "  --port num                        port number (default 7575)\n"
        "  --out dir                         location of data files (default ./data)\n"
        "  --localhost hostname              localhost alias to use when launching from tray\n"
-       "  --ext name1;dir1;name2;dir2;...   serve static files in dir1 as /-/ext/name1, and so on\n"
        "  --log logFileName                 log file name or stderr (default log.txt)\n"
        "  --debug 1,2,3                     1=debug, 2=trace, 3=test (default 1)\n\n");
 }
 
 static void showHome() {
    win_openBrowser(localhost, port, "", false);
-}
-
-static void addExternalFolders(char *external) {
-   if (*external) {
-      int array[20], ix = 0, semi1, semi2;
-      int n = findAll(external, ';', array, 20);
-      for (int i=0; i < n-1; i += 2) {
-         semi1 = array[i];
-         semi2 = array[i+1];
-         external[semi1] = 0;
-         external[semi2] = 0;
-         char *name = t_printf("ext_%s", external + ix);
-         char *uri = t_printf("/-/ext/%s", external + ix);
-         char *folder = external + semi1 + 1;
-         log_debug("ext %s at %s for %s", name, uri, folder);
-         files_addDir(strdup(name), "GET", strdup(uri), strdup(folder), false);
-         ix = semi2 + 1;
-      }
-   }
 }
 
 int main(int argc, char **argv) {
@@ -195,7 +145,7 @@ int main(int argc, char **argv) {
       Map opt = map_new();
       char *exeLoc = win_getExeFolder();
       srcRoot = hPath(exeLoc, "srcroot", NULL);
-      map_putall(opt, "port", "7575", "ext", "", "out", hPath(exeLoc, "data", NULL), "localhost", "localhost", "debug", "0", "log", "log.txt", "help", "false", NULL);
+      map_putall(opt, "port", "7575", "out", hPath(exeLoc, "data", NULL), "localhost", "localhost", "debug", "0", "log", "log.txt", "help", "false", NULL);
       char *envArgv[100];
       int envArgc = win_getEnvOpts("MISC_DOC_OPTS", envArgv, 100);
       if (envArgc > 0) map_parseCLI(opt, envArgv, envArgc);
@@ -204,7 +154,6 @@ int main(int argc, char **argv) {
       dataRoot = map_get(opt, "out");
       debugMode = toInt(map_get(opt, "debug"));
       localhost = map_get(opt, "localhost");
-      char *externalFolders = map_get(opt, "ext");
       char *logLocation = map_get(opt, "log");
       bool doStderr = strcmp("stderr", logLocation) == 0;
       bool doHelp = strcmp("true", map_get(opt, "help")) == 0;
@@ -225,7 +174,7 @@ int main(int argc, char **argv) {
          testAll();
       } else {
          usageOnCatch = false;
-         log_info("running on port %d, src={%s}, data={%s}, mode={%d}, localhost={%s}, ext={%s}", port, srcRoot, dataRoot, debugMode, localhost, externalFolders);
+         log_info("running on port %d, src={%s}, data={%s}, mode={%d}, localhost={%s}", port, srcRoot, dataRoot, debugMode, localhost);
          web_handler("wiki_get", "GET", "/-/md/", wikiGet, NULL);
          web_handler("wiki_save", "POST", "/-/md/", wikiSave, NULL);
          web_handler("wiki_get_img", "GET", "/-/img/", wikiGetImg, NULL);
@@ -233,7 +182,6 @@ int main(int argc, char **argv) {
          log_trace("past web handlers");
          files_addDir("src_cached", "GET", "/-/src/prod/", hPath(srcRoot, "prod", NULL), true);
          files_addDir("src_uncached", "GET", "/-/src/", srcRoot, false);
-         addExternalFolders(externalFolders);
          files_addFile("404-api", "GET", "/-/", hPath(srcRoot, "404.html", NULL), 404, false);
          files_addFile("favicon", "*", "/favicon.ico", hPath(srcRoot, "prod", "favicon.ico", NULL), 200, true);
          files_addFile("index", "GET", "/", hPath(srcRoot, debugMode != M_PROD ? "index-dev.html" : "index.html", NULL), 200, true);

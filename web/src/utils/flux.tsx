@@ -1,3 +1,4 @@
+import {produce} from "immer";
 import { ComponentType, Component, RefObject } from "preact";
 import { useEffect, useState, useReducer, useLayoutEffect } from "preact/hooks"
 
@@ -158,39 +159,24 @@ export class Store<T> {
 
    set<V extends keyof T>(attr:V, val: T[V]) {
       if (this.data[attr] !== val) {
-         let x = Object.assign({}, this.data, {[attr]: val});
-         this.setData(x);
+         this.setData(produce(this.data, draft => { (draft as T)[attr] = val }));
       }
    }
 
    update(func: Fn<T>) {
-      let x = Object.assign({}, this.data);
-      func(x as T);
-      this.setData(x);
-   }
-
-   getShallowCopy<V extends keyof T>(attr: V): T[V] {
-      let obj = this.data[attr];
-      if (null == obj || "object" != typeof obj) return obj;
-      if (obj instanceof Date) {
-         let copy = new Date();
-         copy.setTime(obj.getTime());
-         return copy as any;
-      }
-      if (Array.isArray(obj)) {
-         return ([] as any).concat(obj);
-      }
-      return Object.assign({}, obj);
+      this.setData(produce(this.data, draft => { func(draft as T) }));
    }
 
    private setData(d: T) {
-      let old = this.data;
-      this.data = d;
-      if (this.name != "root") {
-         rootStore.set(this.name, this.data);
-      }
-      if (!dispatcher.deferNotification(this, old)) {
-         this.notify(old);
+      if (d !== this.data) {
+         let old = this.data;
+         this.data = d;
+         if (this.name != "root") {
+            rootStore.set(this.name, this.data);
+         }
+         if (!dispatcher.deferNotification(this, old)) {
+            this.notify(old);
+         }
       }
    }
 
@@ -231,7 +217,7 @@ export class StoreCollection<T> {
 
 export function connect<DerivedProps, InlineProps={}>(TheComponent: ConnectableComponent<DerivedProps, InlineProps>) {
 
-   const name = TheComponent.displayName || Component.name || "Unnamed";
+   const name = TheComponent.displayName || TheComponent.name || "Unnamed";
    return class Connected extends Component<InlineProps> {
       static displayName = "c(" + name + ")";
 
