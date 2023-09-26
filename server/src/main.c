@@ -29,11 +29,15 @@ static char *localhost;
 static int debugMode;
 static int port;
 
-static char *normalizedPath(const char *dir, const char *subdir, char *file, const char *ext) {
-   char *p = file;
-   while (*(++p))
-      if (!isalnum(*p)) *p = '_';
-   return t_printf("%s/%s%s%s%s", dir, subdir, file, ext ? "." : "", ext ? ext : "");
+static char *normalizedPath(const char *dir, const char *subdir, char *file) {
+   int dotIx = -1;
+   int n = strlen(file);
+   for (int i = 0; i < n; i++) {
+      if (file[i] == '.') dotIx = i;
+      if (!isalnum(file[i])) file[i] = '_';
+   }
+   if (dotIx >= 0) file[dotIx] = '.'; // restore extensions dot
+   return t_printf("%s/%s%s%s%s", dir, subdir, file);
 }
 
 static char *rawPath(const char *dir, const char *subdir, char *file) {
@@ -76,7 +80,7 @@ static char *hPath(char *p, ...) {
 
 static bool wikiGet(HttpContext ctx, void *arg) {
    char *localPath = get_req(ctx, H_LOCALPATH);
-   char *filename = normalizedPath(dataRoot, "", localPath, NULL);
+   char *filename = normalizedPath(dataRoot, "", localPath);
    Bytearray input = bytearray_readfile(filename);
    if (input) bytearray_append_all(ctx->responseBody, input->bytes, input->size);
    char *mime = mimeGet(filename);
@@ -108,7 +112,7 @@ static bool wikiSaveImg(HttpContext ctx, void *arg) {
 
 static bool wikiSave(HttpContext ctx, void *arg) {
    char *name = get_req(ctx, H_LOCALPATH);
-   char *filename = normalizedPath(dataRoot, "", name, NULL);
+   char *filename = normalizedPath(dataRoot, "", name);
    bytearray_writefile(ctx->requestBody, filename);
    http_response_headers(ctx, 200, false, "text/plain");
    bytearray_append_all(ctx->responseBody, "Success", 7);
