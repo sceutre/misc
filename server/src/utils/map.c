@@ -93,7 +93,7 @@ static void grow(Map map) {
    MapElement old = map->data;
    int n = map->capacity;
    map->capacity *= 2;
-   map->data = calloc(map->capacity, sizeof(MapElement));
+   map->data = calloc(map->capacity, sizeof(struct MapElement_s));
    map->size = 0;
    for (int i = 0; i < n; i++) {
       if (!isempty(old[i])) {

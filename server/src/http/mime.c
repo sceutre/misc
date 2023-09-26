@@ -4,6 +4,7 @@
 #include <string.h>
 #include "mime.h"
 #include "../utils/map.h"
+#include "../utils/log.h"
 #include "../utils/utils.h"
 
 Map mimeTypes = NULL;
@@ -13,7 +14,7 @@ Map mimeTypes = NULL;
 
 void mimeInit() {
    mimeTypes = map_new_ex(true, 64);
-   put("aac", "audio/aac");
+   put(".aac", "audio/aac");
    put(".bmp", "image/bmp");
    put(".css", "text/css");
    put(".csv", "text/csv");
@@ -45,6 +46,9 @@ void mimeInit() {
    put(".woff2", "font/woff2");
    put(".xhtml", "application/xhtml+xml");
    put(".zip", "application/zip");
+   // app specific
+   put(".draw", "application/json");
+   put(".md", "text/plain");
 }
 
 char *mimeGet(char *name) {
@@ -56,5 +60,6 @@ char *mimeGet(char *name) {
       ext = p;
    }
    char *res = get(ext);
+   log_info("mime type for %s with ext %s was %s", name, ext, res);
    return res == NULL ? "application/octet-stream" : res;
 }
