@@ -6,13 +6,13 @@ import {path} from "./utils/utils.js";
 
 //if ((window as any).MDEV) 
    dispatcher.installActionLogging((action,data) => {
-      console.log(action + " " + JSON.stringify(data));
+      console.log(action,data);
    });
 
 render(<App />, document.getElementById('react') as HTMLElement);
 appBeginDownloader();
 let p = path();
-let title = p == "Misc" ? p : "Misc - " + p;
+let title = p.title == "Misc" ? "Misc" : "Misc - " + p.title;
 if (window.document.title != title) window.document.title = title;
 document.addEventListener("keydown", (ev)=>{
    for (let h of GLOBAL_KEY_HANDLERS) h(ev);

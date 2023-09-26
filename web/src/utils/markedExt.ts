@@ -82,7 +82,7 @@ const wikiExt = {
       let ext = token.ext.toLowerCase();
       let pageName = token.pageName;
       let linkTitle = token.linkTitle;
-      if (ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "gif" || ext == "svg") {
+      if (ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "gif" || ext == "svg" || ext == "draw") {
          let w = ""; let h = "";
          if (pageName !== linkTitle) {
             let parts = linkTitle.split("x");
@@ -93,7 +93,13 @@ const wikiExt = {
                w = "width=\"" + parts[0] + "\"";
             }
          }
-         return `<a href="/-/img/${pageName}"><img src="/-/img/${pageName}" ${w} ${h}></a>`;
+         let dest = "/-/img/" + pageName;
+         let img = dest;
+         if (ext == "draw") {
+            img += ".svg";   // eg /-/img/foo.draw.svg
+            dest = pageName; // eg foo.draw
+         }
+         return `<a href="${dest}"><img src="${img}" ${w} ${h}></a>`;
       }
       return `<a href="${pageName}">${linkTitle}</a>`;
    }

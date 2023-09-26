@@ -6,6 +6,7 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
-     "preact": "10.11.2"
+     "preact": "10.11.2",
+     "immer": "10.0.2"
   }
 }

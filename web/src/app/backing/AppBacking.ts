@@ -2,20 +2,14 @@ import {Store,Action} from "../../utils/flux.js";
 import {log$, path} from "../../utils/utils.js";
 
 export type Theme = "dark" | "light";
-export type ContentType = "markdown" | "mindmap" | "drawing"  | "sidebar" | "empty";
+export type ContentType = "markdown" | "drawing"  | "sidebar" | "empty";
 export type NetStatus = "net-waiting" | "net-clean" | "net-dirty";
 
-type Content = ContentMarkdown | ContentMindMap | ContentDrawing | ContentSidebar | ContentEmpty;
+type Content = ContentMarkdown | ContentDrawing | ContentSidebar | ContentEmpty;
 
 interface ContentMarkdown {
    type: "markdown";
    text: string;
-}
-
-interface ContentMindMap {
-   type: "mindmap";
-   exportData: any;
-   [k:string]:any;
 }
 
 interface ContentDrawing {
@@ -90,13 +84,13 @@ export function appBeginDownloader() {
 
    async function download() {
       if ((Date.now() - appSaveTime) < 10000) return;
-      let resp = await fetch("/-/md/" + path());
+      let resp = await fetch("/-/md/" + path().filename);
       let text:string = "";
       if (resp.ok) {
          text = await resp.text();
       }
       if (text != AppStore.data.raw) actionUpdateDownloaded({downloaded: toObject(text), viaSave: false, raw: text});
-      resp = await fetch("/-/md/sidebar");
+      resp = await fetch("/-/md/sidebar.json");
       if (resp.ok) {
          let text = await resp.text();
          let obj = JSON.parse(text);
@@ -128,12 +122,8 @@ function appSaveImpl(content:Content) {
    async function save() {
       let data = encode(content);
       AppStore.set("netStatus", "net-waiting");
-      let p = path();
-      let ext = 'md';
-      if (content.type != "markdown") { ext = 'json' }
-      let resp = await fetch("-/md/" + p, { method: "POST", body: data, headers: {
-         'MISC-Ext': ext  
-      } });
+      let p = path().filename;
+      let resp = await fetch("-/md/" + p, { method: "POST", body: data});
       if (resp.ok) {
          actionUpdateDownloaded({downloaded: content, viaSave: true, raw: data});
          actionSaved();
@@ -170,14 +160,7 @@ function encode(content:Content) {
 export const GLOBAL_KEY_HANDLERS:{(ev:KeyboardEvent):void}[] = [];
 
 export function toMarkdown() {
-   let content = toObject("");
-   let text = encode(content);
-   actionUpdateDownloaded({downloaded: content, viaSave: false, raw: text});
-   appSave(content, true);
-}
-
-export function toMindMap() {
-   let content:ContentMindMap = { type: "mindmap", exportData: "" };
+   let content:Content = { type: "markdown", text: "" };
    let text = encode(content);
    actionUpdateDownloaded({downloaded: content, viaSave: false, raw: text});
    appSave(content, true);

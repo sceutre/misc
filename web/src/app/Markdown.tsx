@@ -11,7 +11,7 @@ export const Markdown = () => {
 const MarkdownDisplay = (props:{html:string}) => {
    let {html} = props;
    return (<div className="main markdown-display">
-      <div className="main-title">{path().replace(/[_]/g, " ")}</div>
+      <div className="main-title">{path().title}</div>
       <div className="markdown-body" dangerouslySetInnerHTML={{__html: html}} onClick={onClick}></div>
    </div>);
 
@@ -30,7 +30,7 @@ const MarkdownDisplay = (props:{html:string}) => {
 const MarkdownEdit = (props:{text:string}) => {
    let {text} = props;
    return (<div className="main edit markdown-edit">
-      <div className="main-title">{path()}</div>
+      <div className="main-title">{path().title}</div>
       <TextArea onChange={actionTextChanged} value={text} onSave={actionTextEditingDone}/>
    </div>);
 };

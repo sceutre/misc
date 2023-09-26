@@ -1,6 +1,27 @@
 export function path() {
-   let p = decodeURIComponent(window.location.pathname.substring(1)).replace(/[^a-zA-Z0-9]/g, "_") || "Misc";
-   return p;
+   let p = decodeURIComponent(window.location.pathname.substring(1)) || "Misc.md";
+   let name = p;
+   let ext = "";
+   let dotIx = p.lastIndexOf(".");
+   if (dotIx >= 0) {
+      ext = p.substring(dotIx);
+      if (ext == ".md" || ext == ".json" || ext == ".draw" || ext == ".txt") {
+         name = p.substring(0, dotIx);
+      } else {
+         ext = "";
+      }
+   }
+   return {
+      title: name,
+      filename: name.replace(/[^a-zA-Z0-9]/g, "_") + (ext || ".md")
+   }
+}
+
+export function matchingExtension(exts:string[]) {
+   let p = decodeURIComponent(window.location.pathname.substring(1));
+   for (let e of exts) {
+      if (p.endsWith(e)) return e;
+   }
 }
 
 export function wait(tm: number) {

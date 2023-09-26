@@ -1,8 +1,7 @@
 import {useStore} from "../utils/flux.js";
 import {path} from "../utils/utils.js";
-import {actionToggleDark, appSaveImg, AppStore, toDrawing, toMarkdown, toMindMap} from "./backing/AppBacking.js";
+import {actionToggleDark, appSaveImg, AppStore, toDrawing, toMarkdown} from "./backing/AppBacking.js";
 import {actionTextEditingDone, actionTextEditingStart, MarkdownStore} from "./backing/MarkdownBacking.js";
-import {MindMapStore} from "./backing/MindMapBacking.js";
 import {actionSetCompactMode, actionSidebarTextChanged, Icon, isHtmlChunk, SidebarStore} from "./backing/SidebarBacking.js";
 import {TextArea} from "./TextArea.js";
 
@@ -11,7 +10,6 @@ export function Sidebar() {
    let {sidebar, compactMode} = useStore(SidebarStore, ["sidebar", "compactMode"]);
    let {theme, content, netStatus} = useStore(AppStore, ["theme", "content", "netStatus"]);
    let {isEditing, text} = useStore(MarkdownStore, ["isEditing", "text"]);
-   let {allNodes} = useStore(MindMapStore, ["allNodes"]);
    let whens:string[] = [];
    whens.push(theme);
    whens.push(content.type);
@@ -20,10 +18,6 @@ export function Sidebar() {
    if (content.type == "markdown") {
       whens.push((isEditing ? "" : "not-") + "editing");
       if (!text || !text.trim()) whens.push("blank");
-   }
-   if (content.type == "mindmap") {
-      whens.push("editing"); // always editing mindmaps
-      if (allNodes.length <= 1) whens.push("blank");
    }
    return <div className={compactMode ? "sidebar compact" : "sidebar"}>
       {sidebar?.items.map((x,i) => {
@@ -40,7 +34,7 @@ export function Sidebar() {
 export function SidebarEdit() {
    let {text} = useStore(SidebarStore, ["text"])
    return (<div className="main edit">
-      <div className="main-title">{path()}</div>
+      <div className="main-title">{path().title}</div>
       <TextArea onChange={actionSidebarTextChanged} value={text}/>
    </div>);
 }
@@ -72,9 +66,6 @@ function IconLabel(props:{icon:Icon, compact:boolean}) {
             case "$toDark":
             case "$toLight":
                actionToggleDark();
-               break;
-            case "$toMindMap":
-               toMindMap();
                break;
             case "$toMarkdown":
                toMarkdown();

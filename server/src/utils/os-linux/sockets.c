@@ -95,8 +95,8 @@ bool socket_write(CommsSocket p, const unsigned char *data, int len) {
    return true;  // TODO actually see if it was as success
 }
 
-char socket_read(CommsSocket p) {
-   if (p->eof) return READ_EOF;
+ReadResult socket_read(CommsSocket p) {
+   if (p->eof) return { 0, READ_EOF };
    if (p->ix >= p->length) {
       if (p->length + 10 >= SOCKET_READ_BUFFER_SZ) {
          p->ix = 0;
@@ -106,11 +106,11 @@ char socket_read(CommsSocket p) {
       log_trace("recv of size [%d]", len);
       if (len <= 0) {
          p->eof = true;
-         return READ_EOF;
+         return { 0, READ_EOF };
       }
       p->length += len;
    }
-   return p->buf[p->ix++];
+   return { p->buf[p->ix++], 0 } ;
 }
 
 void socket_close(CommsSocket p) {
