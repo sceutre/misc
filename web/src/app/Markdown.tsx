@@ -1,6 +1,6 @@
 import {useStore} from "../utils/flux.js";
 import {path} from "../utils/utils.js";
-import {actionTextChanged, actionTextEditingDone, actionToggleContentCheckbox, MarkdownStore} from "./backing/MarkdownBacking.js";
+import {MarkdownStore, MarkdownStoreActions} from "./backing/MarkdownBacking.js";
 import {TextArea} from "./TextArea.js";
 
 export const Markdown = () => {
@@ -20,7 +20,7 @@ const MarkdownDisplay = (props:{html:string}) => {
       while (t) {
          let n = t.getAttribute("data-ix");
          if (n != null) {
-            actionToggleContentCheckbox({index: +n})
+            MarkdownStoreActions.toggleContentCheckbox({index: +n})
          }
          t = t.parentElement;
       }
@@ -31,6 +31,6 @@ const MarkdownEdit = (props:{text:string}) => {
    let {text} = props;
    return (<div className="main edit markdown-edit">
       <div className="main-title">{path().title}</div>
-      <TextArea onChange={actionTextChanged} value={text} onSave={actionTextEditingDone}/>
+      <TextArea onChange={MarkdownStoreActions.textChanged} value={text} onSave={MarkdownStoreActions.textEditingDone}/>
    </div>);
 };

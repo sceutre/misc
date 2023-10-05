@@ -1,8 +1,8 @@
 import {useStore} from "../utils/flux.js";
 import {path} from "../utils/utils.js";
-import {actionToggleDark, appSaveImg, AppStore, toDrawing, toMarkdown} from "./backing/AppBacking.js";
-import {actionTextEditingDone, actionTextEditingStart, MarkdownStore} from "./backing/MarkdownBacking.js";
-import {actionSetCompactMode, actionSidebarTextChanged, Icon, isHtmlChunk, SidebarStore} from "./backing/SidebarBacking.js";
+import {AppStoreActions, appSaveImg, AppStore, toDrawing, toMarkdown} from "./backing/AppBacking.js";
+import {MarkdownStore, MarkdownStoreActions} from "./backing/MarkdownBacking.js";
+import {Icon, isHtmlChunk, SidebarStore, SidebarStoreActions} from "./backing/SidebarBacking.js";
 import {TextArea} from "./TextArea.js";
 
 
@@ -35,7 +35,7 @@ export function SidebarEdit() {
    let {text} = useStore(SidebarStore, ["text"])
    return (<div className="main edit">
       <div className="main-title">{path().title}</div>
-      <TextArea onChange={actionSidebarTextChanged} value={text}/>
+      <TextArea onChange={SidebarStoreActions.sidebarTextChanged} value={text}/>
    </div>);
 }
 
@@ -58,14 +58,14 @@ function IconLabel(props:{icon:Icon, compact:boolean}) {
       if (action) {
          switch (action) {
             case "$edit": 
-               actionTextEditingStart();
+               MarkdownStoreActions.textEditingStart();
                break;
             case "$editDone":
-               actionTextEditingDone();
+               MarkdownStoreActions.textEditingDone();
                break;
             case "$toDark":
             case "$toLight":
-               actionToggleDark();
+               AppStoreActions.toggleDark();
                break;
             case "$toMarkdown":
                toMarkdown();
@@ -110,7 +110,7 @@ function IconArrow() {
 
 
 function toggleCompactMode() {
-   actionSetCompactMode({compact: !SidebarStore.data.compactMode})
+   SidebarStoreActions.setCompactMode({compact: !SidebarStore.data.compactMode})
 }
 
 function isWhen(whens: string[], when: string[] | undefined) {

@@ -40,31 +40,32 @@ export const AppStore = new Store("AppStore", {
    raw: null
 } as AppData);
 
-export const actionToggleDark =  Action("actionToggleDark", () => {
-   toggleDarkTheme();
-   AppStore.set("theme", isDarkTheme() ? "dark" : "light");
-});
-
-export const actionUnhandledKey =  Action("actionUnhandledKey", (arg: {ev:KeyboardEvent}) => {});
-
-export const actionUpdateDownloaded = Action("actionUpdateDownloaded", (arg: {downloaded:Content, viaSave:boolean, raw:string}) => {
-   AppStore.update(x => {
-      x.content = arg.downloaded;
-      x.raw = arg.raw;
+export class AppStoreActions {
+   static toggleDark = Action("actionToggleDark", () => {
+      toggleDarkTheme();
+      AppStore.set("theme", isDarkTheme() ? "dark" : "light");
    });
-});
 
-// just for others to hook into
-export const actionSetSidebar = Action("actionSetSidebar", (arg:{sidebar:any}) => {});
+   static unhandledKey =  Action("actionUnhandledKey", (arg: {ev:KeyboardEvent}) => {});
 
-export const actionSaved = Action("actionSaved", () => {
-   AppStore.set("netStatus", "net-clean")
-});
-
-export const actionDirty = Action("actionDirty", () => {
-   AppStore.set("netStatus", "net-dirty")
-});
-
+   static updateDownloaded = Action("actionUpdateDownloaded", (arg: {downloaded:Content, viaSave:boolean, raw:string}) => {
+      AppStore.update(x => {
+         x.content = arg.downloaded;
+         x.raw = arg.raw;
+      });
+   });
+   
+   // just for others to hook into
+   static setSidebar = Action("actionSetSidebar", (arg:{sidebar:any}) => {});
+   
+   static saved = Action("actionSaved", () => {
+      AppStore.set("netStatus", "net-clean")
+   });
+   
+   static dirty = Action("actionDirty", () => {
+      AppStore.set("netStatus", "net-dirty")
+   });
+}
 
 function isDarkTheme() {
    let theme = localStorage.getItem("theme");
@@ -89,12 +90,12 @@ export function appBeginDownloader() {
       if (resp.ok) {
          text = await resp.text();
       }
-      if (text != AppStore.data.raw) actionUpdateDownloaded({downloaded: toObject(text), viaSave: false, raw: text});
+      if (text != AppStore.data.raw) AppStoreActions.updateDownloaded({downloaded: toObject(text), viaSave: false, raw: text});
       resp = await fetch("/-/md/sidebar.json");
       if (resp.ok) {
          let text = await resp.text();
          let obj = JSON.parse(text);
-         actionSetSidebar({sidebar: obj});
+         AppStoreActions.setSidebar({sidebar: obj});
       }
    }
 }
@@ -125,8 +126,8 @@ function appSaveImpl(content:Content) {
       let p = path().filename;
       let resp = await fetch("-/md/" + p, { method: "POST", body: data});
       if (resp.ok) {
-         actionUpdateDownloaded({downloaded: content, viaSave: true, raw: data});
-         actionSaved();
+         AppStoreActions.updateDownloaded({downloaded: content, viaSave: true, raw: data});
+         AppStoreActions.saved();
       }
    }
 }
@@ -138,7 +139,7 @@ export function appSaveImg(img:ArrayBuffer, filename:string) {
       AppStore.set("netStatus", "net-waiting");
       let resp = await fetch("-/img/" + filename, { method: "POST", body: img });
       if (resp.ok) {
-         actionSaved();
+         AppStoreActions.saved();
       }
    }
 }
@@ -162,13 +163,13 @@ export const GLOBAL_KEY_HANDLERS:{(ev:KeyboardEvent):void}[] = [];
 export function toMarkdown() {
    let content:Content = { type: "markdown", text: "" };
    let text = encode(content);
-   actionUpdateDownloaded({downloaded: content, viaSave: false, raw: text});
+   AppStoreActions.updateDownloaded({downloaded: content, viaSave: false, raw: text});
    appSave(content, true);
 }
 
 export function toDrawing() {
    let content:ContentDrawing = { type: "drawing", exportData: "" };
    let text = encode(content);
-   actionUpdateDownloaded({downloaded: content, viaSave: false, raw: text});
+   AppStoreActions.updateDownloaded({downloaded: content, viaSave: false, raw: text});
    appSave(content, true);
 }

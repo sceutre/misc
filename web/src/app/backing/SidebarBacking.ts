@@ -1,5 +1,5 @@
 import {Action, Store} from "../../utils/flux.js";
-import {actionSetSidebar, actionUpdateDownloaded, appSave, AppStore} from "./AppBacking.js";
+import {AppStore, AppStoreActions, appSave} from "./AppBacking.js";
 
 export interface Icon {
    label:string;
@@ -25,29 +25,32 @@ export const SidebarStore = new Store("SidebarStore", {
    compactMode: localStorage.getItem("compactMode") == "true"
 });
 
-export const actionSidebarTextChanged = Action("actionSidebarTextChanged", (arg:{text:string}) => {
-   SidebarStore.set("text", arg.text);
-   try {
-      AppStore.set("netStatus", "net-dirty");
-      appSave(JSON.parse(arg.text));
-   } catch (e) {
-      console.warn(e);
-   }
-});
+export class SidebarStoreActions {
+   static setCompactMode = Action("actionSetCompactMode", (arg:{compact:boolean}) => {
+      SidebarStore.set("compactMode", arg.compact);
+      localStorage.setItem("compactMode", arg.compact ? "true" : "false");
+   });
 
-actionSetSidebar.add((arg:{sidebar:SidebarData}) => {
+   static sidebarTextChanged = Action("actionSidebarTextChanged", (arg:{text:string}) => {
+      SidebarStore.set("text", arg.text);
+      try {
+         AppStore.set("netStatus", "net-dirty");
+         appSave(JSON.parse(arg.text));
+      } catch (e) {
+         console.warn(e);
+      }
+   });
+}
+
+
+AppStoreActions.setSidebar.add((arg:{sidebar:SidebarData}) => {
    SidebarStore.set("sidebar", arg.sidebar);
 })
 
-actionUpdateDownloaded.add((arg) => {
+AppStoreActions.updateDownloaded.add((arg) => {
    if (AppStore.data.content.type == "sidebar" && !arg.viaSave) {
       SidebarStore.set("text", JSON.stringify(AppStore.data.content, null, 3));
    }
-});
-
-export const actionSetCompactMode = Action("actionSetCompactMode", (arg:{compact:boolean}) => {
-   SidebarStore.set("compactMode", arg.compact);
-   localStorage.setItem("compactMode", arg.compact ? "true" : "false");
 });
 
 export function isHtmlChunk(chunk:HtmlChunk|Icon): chunk is HtmlChunk {
