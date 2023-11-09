@@ -37,7 +37,7 @@ static char *normalizedPath(const char *dir, const char *subdir, char *file) {
       if (!isalnum(file[i])) file[i] = '_';
    }
    if (dotIx >= 0) file[dotIx] = '.'; // restore extensions dot
-   return t_printf("%s/%s%s%s%s", dir, subdir, file);
+   return t_printf("%s/%s%s", dir, subdir, file);
 }
 
 static char *rawPath(const char *dir, const char *subdir, char *file) {
